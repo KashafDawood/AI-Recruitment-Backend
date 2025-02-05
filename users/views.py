@@ -1,24 +1,32 @@
 from rest_framework import generics, status
 from rest_framework.response import Response
-from .models import User, Candidate
-from .serializers import SignupSerializer, CandidateRegisterSerializer
+from .models import User
+from .serializers import SignupSerializer, LoginSerializer
 from rest_framework.permissions import IsAuthenticated
-from .serializers import LoginSerializer
 from rest_framework.views import APIView
-
-def res(user, res, status_code=status.HTTP_201_CREATED):
-    serializer = user.get_serializer(data = res.data)
-    serializer.is_valid(raise_exception = True)
-    user.perform_create(serializer)
-    header = user.get_success_headers(serializer.data)
-    return Response(serializer.data, headers=header, status=status_code)
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework_simplejwt.tokens import RefreshToken
 
 class SignupView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = SignupSerializer
 
-    def post(self, request):
-        return res(self, request)
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        
+        # Generate tokens
+        refresh = RefreshToken.for_user(user)
+        
+        return Response({
+            "message": f"Successfully registered as {user.role}",
+            "user": serializer.data,
+            "tokens": {
+                "access": str(refresh.access_token),
+                "refresh": str(refresh)
+            }
+        }, status=status.HTTP_201_CREATED)
        
 class LoginView(generics.GenericAPIView):
     serializer_class = LoginSerializer
@@ -34,11 +42,3 @@ class ProtectedAPIView(APIView):
 
     def get(self, request):
         return Response({"message": "You are authenticated!", "user": request.user.email})
-
-class CandidateRegisterView(generics.CreateAPIView):
-    queryset = Candidate.objects.all()
-    serializer_class = CandidateRegisterSerializer
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        return res(self, request)
