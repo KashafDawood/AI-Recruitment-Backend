@@ -2,8 +2,9 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from .models import User, Candidate
 from .serializers import SignupSerializer, CandidateRegisterSerializer
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAuthenticated
 from .serializers import LoginSerializer
+from rest_framework.views import APIView
 
 def res(user, res, status_code=status.HTTP_201_CREATED):
     serializer = user.get_serializer(data = res.data)
@@ -18,21 +19,26 @@ class SignupView(generics.CreateAPIView):
 
     def post(self, request):
         return res(self, request)
-    
-class CandidateRegisterView(generics.CreateAPIView):
-    queryset = Candidate.objects.all()
-    serializer_class = CandidateRegisterSerializer
-
-    def post(self, request):
-        return res(self, request)
-    
-
+       
 class LoginView(generics.GenericAPIView):
     serializer_class = LoginSerializer
-    permission_classes = [AllowAny]
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         
         return Response(serializer.validated_data, status=status.HTTP_200_OK)
+    
+class ProtectedAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return Response({"message": "You are authenticated!", "user": request.user.email})
+
+class CandidateRegisterView(generics.CreateAPIView):
+    queryset = Candidate.objects.all()
+    serializer_class = CandidateRegisterSerializer
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        return res(self, request)

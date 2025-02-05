@@ -26,7 +26,7 @@ class User(AbstractUser):
 
 class Candidate(User):
     skills = models.TextField()
-    resume = models.FileField(upload_to='resumes/')
+    resume = models.FileField(upload_to='resumes/', null=True, blank=True)
     bio = models.TextField(null=True, blank=True)
 
     class Meta:
