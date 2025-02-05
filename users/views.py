@@ -103,7 +103,7 @@ class CookieTokenRefreshView(TokenRefreshView):
             refresh = RefreshToken(refresh_token)
             access_token = str(refresh.access_token)
 
-            response = Response({"message": "Token refreshed"}, status=status.HTTP_200_OK)
+            response = Response({"message": "Token refreshed", 'access': access_token}, status=status.HTTP_200_OK)
             response.set_cookie(
                 key=settings.SIMPLE_JWT['AUTH_COOKIE'],
                 value=access_token,
