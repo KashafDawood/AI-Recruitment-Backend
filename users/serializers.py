@@ -1,6 +1,7 @@
 import random
 from rest_framework import serializers
 from .models import User
+from .models import Candidate
 
 class SignupSerializer(serializers.ModelSerializer):
     class Meta:
@@ -25,3 +26,26 @@ class SignupSerializer(serializers.ModelSerializer):
         # Create the user
         user = User.objects.create_user(**validated_data)
         return user
+
+class CandidateRegisterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Candidate
+        fields = ['username', 'photo', 'phone', 'website', 'socials',
+                  'skills', 'resume', 'bio']
+
+    def create(self, validated_data):
+        # Create Candidate using multi-table inheritance
+        candidate = Candidate.objects.create_user(
+            username=validated_data['username'],
+            photo=validated_data.get('photo'),
+            phone=validated_data.get('phone', ''),
+            website=validated_data.get('website', ''),
+            socials=validated_data.get('socials', {}),
+            role='candidate'
+        )
+        candidate.skills = validated_data.get('skills', '')
+        candidate.resume = validated_data.get('resume')
+        candidate.bio = validated_data.get('bio', '')
+        candidate.save()
+        return candidate
+
