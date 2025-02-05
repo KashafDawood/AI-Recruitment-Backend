@@ -2,6 +2,8 @@ import random
 from rest_framework import serializers
 from .models import User
 from .models import Candidate
+from django.contrib.auth import authenticate
+from rest_framework_simplejwt.tokens import RefreshToken
 
 class SignupSerializer(serializers.ModelSerializer):
     class Meta:
@@ -49,3 +51,39 @@ class CandidateRegisterSerializer(serializers.ModelSerializer):
         candidate.save()
         return candidate
 
+class LoginSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+        email = data.get("email")
+        password = data.get("password")
+
+        if not email or not password:
+            raise serializers.ValidationError("Must provide both email and password")
+
+        # Try to get the user first
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            raise serializers.ValidationError("No user found with this email")
+
+        # Authenticate using the username we got from the user object
+        user = authenticate(username=user.username, password=password)
+            
+        if not user:
+            raise serializers.ValidationError("Invalid credentials")
+
+        # Generate Tokens
+        refresh = RefreshToken.for_user(user)
+
+        return {
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "role": user.role,
+                "name": user.name,
+            },
+            "access": str(refresh.access_token),
+            "refresh": str(refresh),
+        }

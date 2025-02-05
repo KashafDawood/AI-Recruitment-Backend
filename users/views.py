@@ -2,6 +2,8 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from .models import User, Candidate
 from .serializers import SignupSerializer, CandidateRegisterSerializer
+from rest_framework.permissions import AllowAny
+from .serializers import LoginSerializer
 
 def res(user, res, status_code=status.HTTP_201_CREATED):
     serializer = user.get_serializer(data = res.data)
@@ -24,3 +26,13 @@ class CandidateRegisterView(generics.CreateAPIView):
     def post(self, request):
         return res(self, request)
     
+
+class LoginView(generics.GenericAPIView):
+    serializer_class = LoginSerializer
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        return Response(serializer.validated_data, status=status.HTTP_200_OK)
