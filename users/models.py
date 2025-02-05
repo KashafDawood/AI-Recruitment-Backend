@@ -32,7 +32,7 @@ class User(AbstractUser):
 
 class CandidateProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='candidate_profile')
-    skills = models.TextField()
+    skills = models.JSONField(default=list)
     resume = models.FileField(upload_to='resumes/', null=True, blank=True)
     bio = models.TextField(null=True, blank=True)
 
