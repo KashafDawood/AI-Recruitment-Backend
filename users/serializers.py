@@ -149,16 +149,7 @@ class LoginSerializer(serializers.Serializer):
         if not user:
             raise serializers.ValidationError("Invalid credentials")
 
-        # Generate Tokens
-        refresh = RefreshToken.for_user(user)
-
         return {
-            "user": {
-                "id": user.id,
-                "email": user.email,
-                "role": user.role,
-                "name": user.name,
-            },
-            "access": str(refresh.access_token),
-            "refresh": str(refresh),
+            "user": user
         }
+
