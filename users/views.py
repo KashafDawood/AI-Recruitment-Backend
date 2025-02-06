@@ -162,3 +162,15 @@ class EmployerMeView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_object(self):
         return self.request.user.employer_profile
+
+
+class CandidateListView(generics.ListAPIView):
+    queryset = CandidateProfile.objects.all()
+    serializer_class = CandidateSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class EmployerListView(generics.ListAPIView):
+    queryset = EmployerProfile.objects.all()
+    serializer_class = EmployerSerializer
+    permission_classes = [IsAuthenticated]
