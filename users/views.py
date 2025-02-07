@@ -7,7 +7,7 @@ from .serializers import (
     CandidateSerializer,
     EmployerSerializer,
 )
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
@@ -174,3 +174,10 @@ class EmployerListView(generics.ListAPIView):
     queryset = EmployerProfile.objects.all()
     serializer_class = EmployerSerializer
     permission_classes = [IsAuthenticated]
+
+
+class AdminAccessible_CandidateView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = CandidateProfile.objects.all()
+    serializer_class = CandidateSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    lookup_field = "id"

@@ -9,6 +9,7 @@ from .views import (
     EmployerMeView,
     CandidateListView,
     EmployerListView,
+    AdminAccessible_CandidateView,
 )
 
 urlpatterns = [
@@ -25,4 +26,9 @@ urlpatterns = [
     ),
     path("employer/", EmployerListView.as_view(), name="get-all-employer"),
     path("employer/me", EmployerMeView.as_view(), name="employer-endpoints"),
+    path(
+        "candidate/<int:id>",
+        AdminAccessible_CandidateView.as_view(),
+        name="admin-accessible-candidate-view",
+    ),
 ]
