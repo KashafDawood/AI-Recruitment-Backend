@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "corsheaders",
     "users",
+    "emails",
 ]
 
 MIDDLEWARE = [
@@ -163,3 +164,13 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+# Email server
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+# EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"
+ANYMAIL = {
+    "MAILGUN_API_KEY": os.environ.get("API_KEY"),
+    "MAILGUN_SENDER_DOMAIN": os.environ.get("SENDER_DOMAIN"),
+}
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_EMAIL")
