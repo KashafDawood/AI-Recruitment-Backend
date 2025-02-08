@@ -279,3 +279,7 @@ class ChangePasswordSerializer(serializers.Serializer):
 
 class ChangeUsername(serializers.Serializer):
     username = serializers.CharField(required=True)
+
+
+class VerifyEmailOTP(serializers.Serializer):
+    otp = serializers.CharField(max_length=6)

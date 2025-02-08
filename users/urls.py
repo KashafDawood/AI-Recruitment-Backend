@@ -12,10 +12,14 @@ from .views import (
     AdminAccessible_CandidateView,
     ChangePasswordView,
     ChangeUsernameView,
+    VerifyEmailOTPView,
+    ResendEmailOTPView,
 )
 
 urlpatterns = [
     path("signup/", SignupView.as_view(), name="user-signup"),
+    path("verify-email/", VerifyEmailOTPView.as_view(), name="verify-email"),
+    path("resend-otp-email/", ResendEmailOTPView.as_view(), name="resend-otp-email"),
     path("login/", LoginView.as_view(), name="login"),
     path("logout/", LogoutAPIView.as_view(), name="logout"),
     path("token/refresh/", CookieTokenRefreshView.as_view(), name="token-refresh"),

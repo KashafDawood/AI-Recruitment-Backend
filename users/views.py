@@ -8,6 +8,7 @@ from .serializers import (
     EmployerSerializer,
     ChangePasswordSerializer,
     ChangeUsername,
+    VerifyEmailOTP,
 )
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.views import APIView
@@ -18,6 +19,33 @@ import datetime
 from datetime import UTC, timedelta
 from django.utils import timezone
 from core.permissions import IsCandidate, IsEmployer
+from emails.models import EmailOTP
+from emails.views import generate_otp
+from django.db import transaction  # new import
+
+
+def set_http_only_cookie(res, access_token, refresh):
+    # set acess token cookie
+    res.set_cookie(
+        key=settings.SIMPLE_JWT["AUTH_COOKIE"],
+        value=access_token,
+        httponly=True,
+        secure=settings.SIMPLE_JWT["AUTH_COOKIE_SECURE"],
+        samesite=settings.SIMPLE_JWT["AUTH_COOKIE_SAMESITE"],
+        expires=datetime.datetime.now(UTC)
+        + settings.SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"],
+    )
+
+    # Set Refresh Token Cookie
+    res.set_cookie(
+        key=settings.SIMPLE_JWT["AUTH_COOKIE_REFRESH"],
+        value=str(refresh),
+        httponly=True,
+        secure=settings.SIMPLE_JWT["AUTH_COOKIE_SECURE"],
+        samesite=settings.SIMPLE_JWT["AUTH_COOKIE_SAMESITE"],
+        expires=datetime.datetime.now(UTC)
+        + settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"],
+    )
 
 
 class SignupView(generics.CreateAPIView):
@@ -29,20 +57,88 @@ class SignupView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
-        # Generate tokens
-        refresh = RefreshToken.for_user(user)
+        generate_otp(user)
 
         return Response(
             {
                 "message": f"Successfully registered as {user.role}",
                 "user": serializer.data,
-                "tokens": {
-                    "access": str(refresh.access_token),
-                    "refresh": str(refresh),
-                },
             },
             status=status.HTTP_201_CREATED,
         )
+
+
+class ResendEmailOTPView(APIView):
+    def post(self, request):
+        user = request.user
+
+        if not user.is_authenticated:
+            return Response(
+                {"error": "Invalid user"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        generate_otp(user)
+
+        return Response({"message": "OTP sent successfully"}, status=status.HTTP_200_OK)
+
+
+class VerifyEmailOTPView(APIView):
+    def post(self, request):
+        serializer = VerifyEmailOTP(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = request.user
+        otp_submitted = serializer.validated_data["otp"]
+
+        if not user.is_authenticated:
+            email = request.data.get("user", {}).get("email")
+            if not email:
+                return Response(
+                    {"error": "Invalid user"}, status=status.HTTP_400_BAD_REQUEST
+                )
+            try:
+                user = User.objects.get(email=email)
+            except User.DoesNotExist:
+                return Response(
+                    {"error": "Invalid user"}, status=status.HTTP_400_BAD_REQUEST
+                )
+        try:
+            with transaction.atomic():  # ensure OTP update is atomic
+                otp_obj = (
+                    EmailOTP.objects.select_for_update()
+                    .filter(user__email=user.email, otp=otp_submitted, verified=False)
+                    .latest("created_at")
+                )
+
+                if timezone.now() > otp_obj.expires_at:
+                    return Response(
+                        {"error": "OTP has expired"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+                otp_obj.verified = True
+                otp_obj.save()
+        except EmailOTP.DoesNotExist:
+            return Response(
+                {"error": "Invalid OTP or email"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Generate JWT tokens
+        refresh = RefreshToken.for_user(user)
+        access_token = str(refresh.access_token)
+
+        response = Response(
+            {
+                "message": "Email verified successfully",
+                "access": access_token,
+                "refresh": str(refresh),
+            },
+            status=status.HTTP_200_OK,
+        )
+
+        set_http_only_cookie(res=response, access_token=access_token, refresh=refresh)
+
+        return response
 
 
 class LoginView(generics.GenericAPIView):
@@ -53,6 +149,12 @@ class LoginView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
 
         user = serializer.validated_data["user"]
+
+        if not user.is_verified:
+            return Response(
+                {"error": "Please verify your email before logging in."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
 
         # Generate JWT tokens
         refresh = RefreshToken.for_user(user)
@@ -74,27 +176,7 @@ class LoginView(generics.GenericAPIView):
             }
         )
 
-        # Set Access Token Cookie
-        response.set_cookie(
-            key=settings.SIMPLE_JWT["AUTH_COOKIE"],
-            value=access_token,
-            httponly=True,
-            secure=settings.SIMPLE_JWT["AUTH_COOKIE_SECURE"],
-            samesite=settings.SIMPLE_JWT["AUTH_COOKIE_SAMESITE"],
-            expires=datetime.datetime.now(UTC)
-            + settings.SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"],
-        )
-
-        # Set Refresh Token Cookie
-        response.set_cookie(
-            key=settings.SIMPLE_JWT["AUTH_COOKIE_REFRESH"],
-            value=str(refresh),
-            httponly=True,
-            secure=settings.SIMPLE_JWT["AUTH_COOKIE_SECURE"],
-            samesite=settings.SIMPLE_JWT["AUTH_COOKIE_SAMESITE"],
-            expires=datetime.datetime.now(UTC)
-            + settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"],
-        )
+        set_http_only_cookie(res=response, access_token=access_token, refresh=refresh)
 
         return response
 
