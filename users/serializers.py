@@ -275,3 +275,7 @@ class EmployerSerializer(serializers.ModelSerializer):
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)
+
+
+class ChangeUsername(serializers.Serializer):
+    username = serializers.CharField(required=True)

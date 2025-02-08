@@ -7,6 +7,7 @@ from .serializers import (
     CandidateSerializer,
     EmployerSerializer,
     ChangePasswordSerializer,
+    ChangeUsername,
 )
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.views import APIView
@@ -14,7 +15,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
 from django.conf import settings
 import datetime
-from datetime import UTC
+from datetime import UTC, timedelta
+from django.utils import timezone
 from core.permissions import IsCandidate, IsEmployer
 
 
@@ -65,6 +67,7 @@ class LoginView(generics.GenericAPIView):
                     "email": user.email,
                     "role": user.role,
                     "name": user.name,
+                    "username": user.username,
                 },
                 "access": access_token,
                 "refresh": str(refresh),
@@ -201,4 +204,38 @@ class ChangePasswordView(APIView):
             return Response(
                 {"message": "Password updated successfully"}, status=status.HTTP_200_OK
             )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ChangeUsernameView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = ChangeUsername(data=request.data)
+        if serializer.is_valid():
+            user = request.user
+            change_username_at = user.changeUsernameAt
+            if (
+                not change_username_at
+                or change_username_at == ""
+                or (timezone.now() - change_username_at) > timedelta(hours=48)
+            ):
+                new_username = serializer.validated_data["username"]
+                if User.objects.filter(username=new_username).exists():
+                    return Response(
+                        {"new_username": "Username already taken"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                user.username = new_username
+                user.changeUsernameAt = timezone.now()
+                user.save()
+                return Response(
+                    {"message": "Username updated successfully"},
+                    status=status.HTTP_200_OK,
+                )
+            else:
+                return Response(
+                    {"message": "Username can only be changed once every 48 hours"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
