@@ -10,6 +10,7 @@ from .views import (
     CandidateListView,
     EmployerListView,
     AdminAccessible_CandidateView,
+    ChangePasswordView,
 )
 
 urlpatterns = [
@@ -19,6 +20,7 @@ urlpatterns = [
     path("token/refresh/", CookieTokenRefreshView.as_view(), name="token-refresh"),
     path("protected/", ProtectedAPIView.as_view(), name="protected-api"),
     path("candidate/", CandidateListView.as_view(), name="get-all-candidate"),
+    path("change-password/", ChangePasswordView.as_view(), name="change-password"),
     path(
         "candidate/me",
         CandidateMeView.as_view(),

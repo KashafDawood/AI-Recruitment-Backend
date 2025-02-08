@@ -270,3 +270,8 @@ class EmployerSerializer(serializers.ModelSerializer):
         instance.industry = validated_data.get("industry", instance.industry)
         instance.save()
         return instance
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)

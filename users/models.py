@@ -17,6 +17,8 @@ class User(AbstractUser):
     phone = models.CharField(max_length=20, null=True, blank=True)
     website = models.URLField(null=True, blank=True)
     socials = models.JSONField(null=True, blank=True)
+    active = models.BooleanField(null=True, blank=True)
+    changeUsernameAt = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         db_table = "users_user"
