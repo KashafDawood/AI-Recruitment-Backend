@@ -262,10 +262,17 @@ class EmployerListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
 
-class AdminAccessible_CandidateView(generics.RetrieveUpdateDestroyAPIView):
+class CandidateView(generics.RetrieveUpdateDestroyAPIView):
     queryset = CandidateProfile.objects.all()
     serializer_class = CandidateSerializer
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticated]
+    lookup_field = "id"
+
+
+class EmployerView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = EmployerProfile.objects.all()
+    serializer_class = EmployerSerializer
+    permission_classes = [IsAuthenticated]
     lookup_field = "id"
 
 
