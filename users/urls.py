@@ -9,8 +9,7 @@ from .views import (
     EmployerMeView,
     CandidateListView,
     EmployerListView,
-    CandidateView,
-    EmployerView,
+    UserView,
     ChangePasswordView,
     ChangeUsernameView,
     VerifyEmailOTPView,
@@ -36,13 +35,8 @@ urlpatterns = [
     path("employer/", EmployerListView.as_view(), name="get-all-employer"),
     path("employer/me", EmployerMeView.as_view(), name="employer-endpoints"),
     path(
-        "candidate/<int:id>",
-        CandidateView.as_view(),
-        name="admin-accessible-candidate-view",
-    ),
-    path(
-        "employer/<int:id>",
-        EmployerView.as_view(),
-        name="admin-accessible-employer-view",
+        "<int:id>",
+        UserView.as_view(),
+        name="user-by-id-view",
     ),
 ]

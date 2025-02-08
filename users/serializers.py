@@ -284,3 +284,20 @@ class ChangeUsername(serializers.Serializer):
 
 class VerifyEmailOTP(serializers.Serializer):
     otp = serializers.CharField(max_length=6)
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "username",
+            "name",
+            "email",
+            "role",
+            "photo",
+            "phone",
+            "website",
+            "socials",
+        ]
+        read_only_fields = ["id", "username", "email", "role"]

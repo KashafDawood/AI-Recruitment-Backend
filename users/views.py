@@ -9,6 +9,7 @@ from .serializers import (
     ChangePasswordSerializer,
     ChangeUsername,
     VerifyEmailOTP,
+    UserSerializer,
 )
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.views import APIView
@@ -265,16 +266,9 @@ class EmployerListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
 
-class CandidateView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = CandidateProfile.objects.all()
-    serializer_class = CandidateSerializer
-    permission_classes = [IsAuthenticated]
-    lookup_field = "id"
-
-
-class EmployerView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = EmployerProfile.objects.all()
-    serializer_class = EmployerSerializer
+class UserView(generics.RetrieveAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = "id"
 
