@@ -7,6 +7,7 @@ from django.contrib.auth import authenticate
 
 class SignupSerializer(serializers.ModelSerializer):
     # Fields for basic user registration
+    id = serializers.IntegerField(read_only=True)
     role = serializers.ChoiceField(
         choices=User.ROLE_CHOICES, required=True, allow_null=False
     )
@@ -25,7 +26,7 @@ class SignupSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            # Basic user fields
+            "id",
             "name",
             "email",
             "password",

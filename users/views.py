@@ -58,6 +58,7 @@ class SignupView(generics.CreateAPIView):
         user = serializer.save()
 
         generate_otp(user)
+        print(user)
 
         return Response(
             {
@@ -93,13 +94,15 @@ class VerifyEmailOTPView(APIView):
             email = request.data.get("user", {}).get("email")
             if not email:
                 return Response(
-                    {"error": "Invalid user"}, status=status.HTTP_400_BAD_REQUEST
+                    {"error": "User email not provided in request body"},
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
             try:
                 user = User.objects.get(email=email)
             except User.DoesNotExist:
                 return Response(
-                    {"error": "Invalid user"}, status=status.HTTP_400_BAD_REQUEST
+                    {"error": "User email not provided in request body"},
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
         try:
             with transaction.atomic():  # ensure OTP update is atomic
