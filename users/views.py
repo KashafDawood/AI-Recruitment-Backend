@@ -59,7 +59,6 @@ class SignupView(generics.CreateAPIView):
         user = serializer.save()
 
         generate_otp(user)
-        print(user)
 
         return Response(
             {
@@ -73,14 +72,21 @@ class SignupView(generics.CreateAPIView):
 class ResendEmailOTPView(APIView):
     def post(self, request):
         user = request.user
-
         if not user.is_authenticated:
-            return Response(
-                {"error": "Invalid user"}, status=status.HTTP_400_BAD_REQUEST
-            )
-
+            user_data = request.data.get("user")
+            if not user_data or not user_data.get("email"):
+                return Response(
+                    {"error": "User not provided in request body"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            try:
+                user = User.objects.get(email=user_data.get("email"))
+            except User.DoesNotExist:
+                return Response(
+                    {"error": "User does not exist"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
         generate_otp(user)
-
         return Response({"message": "OTP sent successfully"}, status=status.HTTP_200_OK)
 
 
@@ -95,14 +101,14 @@ class VerifyEmailOTPView(APIView):
             email = request.data.get("user", {}).get("email")
             if not email:
                 return Response(
-                    {"error": "User email not provided in request body"},
+                    {"error": "User not provided in request body"},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             try:
                 user = User.objects.get(email=email)
             except User.DoesNotExist:
                 return Response(
-                    {"error": "User email not provided in request body"},
+                    {"error": "User not provided in request body"},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
         try:

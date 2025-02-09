@@ -166,11 +166,11 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
-# Email server
+# Email server configuration
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 # EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"
-ANYMAIL = {
-    "MAILGUN_API_KEY": os.environ.get("API_KEY"),
-    "MAILGUN_SENDER_DOMAIN": os.environ.get("SENDER_DOMAIN"),
-}
-DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_EMAIL")
+# ANYMAIL = {
+#     "MAILGUN_API_KEY": os.environ.get("MAILGUN_API_KEY"),
+#     "MAILGUN_SENDER_DOMAIN": os.environ.get("SENDER_DOMAIN"),
+# }
+# DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_EMAIL")

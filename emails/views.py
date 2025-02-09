@@ -1,5 +1,4 @@
-from django.core.mail import send_mail
-from django.conf import settings
+from .email import send_simple_message
 from .models import EmailOTP
 
 
@@ -7,7 +6,7 @@ def send_otp_email(email, otp):
     subject = "Your OTP for Signup Verification"
     message = f"Your OTP is {otp}. Please enter this to verify your email. The OTP will expire after 10 minutes."
 
-    send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [email])
+    send_simple_message(subject, message, [email])
 
 
 def generate_otp(user):
