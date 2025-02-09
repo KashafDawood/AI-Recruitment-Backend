@@ -1,12 +1,15 @@
 from .email import send_simple_message
 from .models import EmailOTP
+from django.template.loader import render_to_string
 
 
 def send_otp_email(email, otp):
     subject = "Your OTP for Signup Verification"
     message = f"Your OTP is {otp}. Please enter this to verify your email. The OTP will expire after 10 minutes."
-
-    send_simple_message(subject, message, [email])
+    html_message = render_to_string(
+        "./otp_email_template.html", {"otp": otp, "expiry_minutes": 10}
+    )
+    send_simple_message(subject, message, [email], html_message=html_message)
 
 
 def generate_otp(user):
