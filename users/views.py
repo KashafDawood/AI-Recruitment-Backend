@@ -10,10 +10,12 @@ from .serializers import (
     ChangeUsername,
     VerifyEmailOTP,
     UserSerializer,
+    ForgetPassword,
+    ResetPassword,
 )
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.views import APIView
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from rest_framework_simplejwt.views import TokenRefreshView
 from django.conf import settings
 import datetime
@@ -21,8 +23,8 @@ from datetime import UTC, timedelta
 from django.utils import timezone
 from core.permissions import IsCandidate, IsEmployer
 from emails.models import EmailOTP
-from emails.views import generate_otp
-from django.db import transaction  # new import
+from emails.views import generate_otp, send_forget_password_email
+from django.db import transaction
 
 
 def set_http_only_cookie(res, access_token, refresh):
@@ -331,3 +333,57 @@ class ChangeUsernameView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ForgetPasswordView(APIView):
+    def post(self, request, *args, **kwargs):
+        serializer = ForgetPassword(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        useremail = serializer.validated_data["email"]
+
+        try:
+            user_data = User.objects.get(email=useremail)
+            reset_token = RefreshToken.for_user(user_data).access_token
+            # Update URL to use lowercase 'resetpassword'
+            reset_url = f"{request.scheme}://{request.get_host()}/api/users/resetpassword/{reset_token}"
+
+            # send reset password email
+            send_forget_password_email(useremail, reset_url)
+
+            return Response(
+                {
+                    "message": "Reset password email sent successfully",
+                    "reset_url": reset_url,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        except User.DoesNotExist:
+            return Response(
+                {"error": "User with this email does not exist"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
+class ResetPasswordView(APIView):
+    def post(self, request, token, *args, **kwargs):
+        serializer = ResetPassword(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            access = AccessToken(token)
+            user = User.objects.get(id=access["user_id"])
+        except (User.DoesNotExist, Exception):
+            return Response(
+                {"error": "Invalid or expired token"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user.set_password(serializer.validated_data["new_password"])
+        user.save()
+
+        return Response(
+            {"message": "Password reset successfully"},
+            status=status.HTTP_200_OK,
+        )

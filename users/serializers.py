@@ -301,3 +301,11 @@ class UserSerializer(serializers.ModelSerializer):
             "socials",
         ]
         read_only_fields = ["id", "username", "email", "role"]
+
+
+class ForgetPassword(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+
+
+class ResetPassword(serializers.Serializer):
+    new_password = serializers.CharField(required=True)

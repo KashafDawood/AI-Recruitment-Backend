@@ -14,6 +14,8 @@ from .views import (
     ChangeUsernameView,
     VerifyEmailOTPView,
     ResendEmailOTPView,
+    ForgetPasswordView,
+    ResetPasswordView,
 )
 
 urlpatterns = [
@@ -26,6 +28,10 @@ urlpatterns = [
     path("protected/", ProtectedAPIView.as_view(), name="protected-api"),
     path("candidate/", CandidateListView.as_view(), name="get-all-candidate"),
     path("change-password/", ChangePasswordView.as_view(), name="change-password"),
+    path("forget-password/", ForgetPasswordView.as_view(), name="forget-password"),
+    path(
+        "resetpassword/<str:token>", ResetPasswordView.as_view(), name="reset-password"
+    ),
     path("change-username/", ChangeUsernameView.as_view(), name="change-username"),
     path(
         "candidate/me",
