@@ -28,6 +28,7 @@ class SignupSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "name",
+            "username",
             "email",
             "password",
             "role",
@@ -88,16 +89,16 @@ class SignupSerializer(serializers.ModelSerializer):
             "logo": validated_data.pop("logo", None),
         }
 
-        # Generate username from email
-        email = validated_data["email"]
-        username = email.split("@")[0]
-        base_username = username
-        num = random.randint(10, 99)
-        while User.objects.filter(username=username).exists():
-            username = f"{base_username}{num}"
-            num = random.randint(10, 99)
+        # # Generate username from email
+        # email = validated_data["email"]
+        # username = email.split("@")[0]
+        # base_username = username
+        # num = random.randint(10, 99)
+        # while User.objects.filter(username=username).exists():
+        #     username = f"{base_username}{num}"
+        #     num = random.randint(10, 99)
 
-        validated_data["username"] = username
+        # validated_data["username"] = username
 
         # Create user
         user = User.objects.create_user(**validated_data)
