@@ -42,11 +42,15 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+]
+
+INSTALLED_APPS += [
     "rest_framework",
     "rest_framework_simplejwt",
     "corsheaders",
     "users",
     "emails",
+    "jobs",
 ]
 
 MIDDLEWARE = [
@@ -174,3 +178,10 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 #     "MAILGUN_SENDER_DOMAIN": os.environ.get("SENDER_DOMAIN"),
 # }
 # DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_EMAIL")
+
+# openAI
+OPENAI_API_KEY = os.environ.get("OpenAI_API_KEY")
+# Changed variable names to uppercase
+OPENAI_TOKEN = os.environ.get("GITHUB_TOKEN")
+OPENAI_ENDPOINT = "https://models.inference.ai.azure.com"
+OPENAI_MODEL = "gpt-4o"
