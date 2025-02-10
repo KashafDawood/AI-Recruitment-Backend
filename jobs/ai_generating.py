@@ -25,8 +25,8 @@ def generate_job_listing(
     - **benefits** {benefits}
 
     **Structure the output as follows (avoid extra newline characters):**
-    - Job Title (Bold & Centered)
-    - Company, Location, Experience, Salary (Formatted Clearly)
+    - Job Title (H2)
+    - Company, Location, Experience, Salary (Formatted Clearly in a single line separate them with '|' )
     - A compelling job description (2-3 paragraphs)
     - Key Responsibilities (Bulleted list)
     - Required Qualifications and Skills (Bulleted list)
