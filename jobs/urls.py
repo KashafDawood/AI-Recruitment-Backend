@@ -1,5 +1,10 @@
 from django.urls import path
-from .views import GenerateJobPostingView, PublishJobListingView, JobListingView
+from .views import (
+    GenerateJobPostingView,
+    PublishJobListingView,
+    JobListingView,
+    JobListingListView,
+)
 
 urlpatterns = [
     path(
@@ -9,4 +14,5 @@ urlpatterns = [
     ),
     path("publish-job-post/", PublishJobListingView.as_view(), name="publish-job-post"),
     path("my-job-listing/<int:id>", JobListingView.as_view(), name="my-jobs"),
+    path("", JobListingListView.as_view(), name="get-all-jobs"),
 ]

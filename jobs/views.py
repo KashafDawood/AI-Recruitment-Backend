@@ -109,3 +109,9 @@ class JobListingView(generics.RetrieveUpdateDestroyAPIView):
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         return Response(serializer.data)
+
+
+class JobListingListView(generics.ListAPIView):
+    queryset = JobListing.objects.all()
+    serializer_class = JobListingSerializer
+    permission_classes = [IsAuthenticated]
