@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 import os
+import cloudinary
 from dotenv import load_dotenv
 from pathlib import Path
 
@@ -46,6 +47,8 @@ INSTALLED_APPS = [
 INSTALLED_APPS += [
     "rest_framework",
     "rest_framework_simplejwt",
+    "cloudinary",
+    "cloudinary_storage",
     "corsheaders",
     "users",
     "emails",
@@ -188,3 +191,10 @@ OPENAI_API_KEY = os.environ.get("OpenAI_API_KEY")
 OPENAI_TOKEN = os.environ.get("GITHUB_TOKEN")
 OPENAI_ENDPOINT = "https://models.inference.ai.azure.com"
 OPENAI_MODEL = "gpt-4o"
+
+cloudinary.config(
+    cloud_name=os.environ.get("CLOUD_NAME"),
+    api_key=os.environ.get("CLOUDINARY_API_KEY"),
+    api_secret=os.environ.get("CLOUDINARY_API_SECRET"),
+)
+DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"

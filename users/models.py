@@ -1,4 +1,5 @@
 from django.contrib.auth.models import AbstractUser
+from cloudinary.models import CloudinaryField
 from django.db import models
 
 
@@ -13,7 +14,10 @@ class User(AbstractUser):
     role = models.CharField(
         max_length=20, choices=ROLE_CHOICES, null=True, blank=True, default=None
     )
-    photo = models.ImageField(upload_to="photos/", null=True, blank=True)
+    photo = CloudinaryField(
+        null=True,
+        blank=True,
+    )
     phone = models.CharField(max_length=20, null=True, blank=True)
     website = models.URLField(null=True, blank=True)
     socials = models.JSONField(null=True, blank=True)
@@ -51,7 +55,10 @@ class EmployerProfile(models.Model):
         User, on_delete=models.CASCADE, related_name="employer_profile"
     )
     company_name = models.CharField(max_length=255)
-    logo = models.ImageField(upload_to="logos/", null=True, blank=True)
+    logo = CloudinaryField(
+        null=True,
+        blank=True,
+    )
     industry = models.CharField(max_length=100)
 
     class Meta:
