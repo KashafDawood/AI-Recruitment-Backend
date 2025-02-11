@@ -19,6 +19,17 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.http import JsonResponse
+
+
+def custom_404_view(request, exception):
+    response_data = {
+        "error": "Not Found",
+        "message": "The requested endpoint does not exist.",
+        "status_code": 404,
+    }
+    return JsonResponse(response_data, status=404)
+
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -26,3 +37,6 @@ urlpatterns = [
     path("api/jobs/", include("jobs.urls")),
     path("api/ai/", include("ai.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# Custom error handlers
+handler404 = custom_404_view
