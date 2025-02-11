@@ -2,9 +2,10 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .serializer import GenerateJobListing
-from .generator import generate_job_listing
+from .JobList_generator import generate_job_listing
+from .bio_generator import generate_candidate_bio
 from rest_framework.permissions import IsAuthenticated
-from core.permissions import IsEmployer
+from core.permissions import IsEmployer, IsCandidate
 import markdown
 from bs4 import BeautifulSoup
 
@@ -48,3 +49,28 @@ class GenerateJobPostingView(APIView):
 
             return Response({"job_listing": formatted_job}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class GenerateCandidateBioView(APIView):
+    permission_classes = [IsAuthenticated, IsCandidate]
+
+    def post(self, request, *args, **kwargs):
+        user = request.user
+
+        if not user:
+            return Response(
+                {"error": "User not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        bio = generate_candidate_bio(user)
+
+        # Remove Markdown code block markers (```markdown ... ```)
+        if bio.startswith("```markdown"):
+            bio = bio.strip("```markdown").strip("```")
+
+        # Convert Markdown to HTML
+        formatted_bio = markdown.markdown(bio)
+        soup = BeautifulSoup(formatted_bio, "html.parser")
+        formatted_bio = soup.prettify(formatter="html").replace("\n", " ")
+
+        return Response({"bio": formatted_bio}, status=status.HTTP_200_OK)

@@ -34,7 +34,6 @@ def generate_job_listing(
     - Why Join Us? (Engaging description with bullet points)
     - Application Instructions (Clear Call to Action)
     """
-
     client = OpenAI(
         base_url=settings.OPENAI_ENDPOINT,
         api_key=settings.OPENAI_TOKEN,
@@ -51,5 +50,7 @@ def generate_job_listing(
         ],
         temperature=0.7,
     )
-
     return completion.choices[0].message.content
+
+
+# ...existing code...

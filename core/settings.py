@@ -164,6 +164,9 @@ STATIC_URL = "static/"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
+# Add BASE_URL setting for generating absolute URLs
+BASE_URL = os.environ.get("BASE_URL", "http://localhost")
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
