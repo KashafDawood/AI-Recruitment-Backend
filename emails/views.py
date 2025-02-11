@@ -25,3 +25,12 @@ def send_forget_password_email(email, url):
         "./forget_password_email_template.html", {"email": email, "url": url}
     )
     send_simple_message(subject, message, [email], html_message=html_message)
+
+
+def send_reactivate_account_email(email, url):
+    subject = "Reactivate Your Account"
+    message = "Click the link below to reactivate your account. If you did not request this action, please ignore this email."
+    html_message = render_to_string(
+        "./reactivate_account_email_template.html", {"email": email, "url": url}
+    )
+    send_simple_message(subject, message, [email], html_message=html_message)

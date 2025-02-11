@@ -23,7 +23,11 @@ from datetime import UTC, timedelta
 from django.utils import timezone
 from core.permissions import IsCandidate, IsEmployer
 from emails.models import EmailOTP
-from emails.views import generate_otp, send_forget_password_email
+from emails.views import (
+    generate_otp,
+    send_forget_password_email,
+    send_reactivate_account_email,
+)
 from django.db import transaction
 
 
@@ -166,6 +170,12 @@ class LoginView(generics.GenericAPIView):
             return Response(
                 {"error": "Please verify your email before logging in."},
                 status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        if not user.is_active:
+            return Response(
+                {"error": "Your account is deactivated"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         # Generate JWT tokens
@@ -387,3 +397,79 @@ class ResetPasswordView(APIView):
             {"message": "Password reset successfully"},
             status=status.HTTP_200_OK,
         )
+
+
+class DeactivateAccountView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        user.is_active = False
+        user.save()
+        response = Response(
+            {"message": "Account deactivated successfully"}, status=status.HTTP_200_OK
+        )
+        response.delete_cookie(settings.SIMPLE_JWT["AUTH_COOKIE"])
+        response.delete_cookie(settings.SIMPLE_JWT["AUTH_COOKIE_REFRESH"])
+        return response
+
+
+class ReactivateAccountView(APIView):
+    def post(self, request, token, *args, **kwargs):
+        try:
+            access = AccessToken(token)
+            user = User.objects.get(id=access["user_id"])
+            if user.is_active:
+                return Response(
+                    {"message": "Account already active"}, status=status.HTTP_200_OK
+                )
+            user.is_active = True
+            user.save()
+            refresh = RefreshToken.for_user(user)
+            access_token = str(refresh.access_token)
+            response = Response(
+                {
+                    "message": "Account reactivated successfully",
+                    "access": access_token,
+                    "refresh": str(refresh),
+                },
+                status=status.HTTP_200_OK,
+            )
+            set_http_only_cookie(
+                res=response, access_token=access_token, refresh=refresh
+            )
+            return response
+        except Exception:
+            return Response(
+                {"error": "Invalid or expired token"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
+class ReactivateAccountEmailView(APIView):
+    def post(self, request):
+        serializer = ForgetPassword(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        useremail = serializer.validated_data["email"]
+        try:
+            user = User.objects.get(email=useremail)
+            if user.is_active:
+                return Response(
+                    {"message": "Account is already active"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            token = RefreshToken.for_user(user).access_token
+            url = (
+                f"{request.scheme}://{request.get_host()}/api/users/reactivate/{token}/"
+            )
+
+            send_reactivate_account_email(useremail, url)
+            return Response(
+                {"message": "Reactivation email sent successfully"},
+                status=status.HTTP_200_OK,
+            )
+        except User.DoesNotExist:
+            return Response(
+                {"error": "User with this email does not exist"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )

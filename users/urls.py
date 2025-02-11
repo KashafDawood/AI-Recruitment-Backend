@@ -16,6 +16,9 @@ from .views import (
     ResendEmailOTPView,
     ForgetPasswordView,
     ResetPasswordView,
+    DeactivateAccountView,
+    ReactivateAccountView,
+    ReactivateAccountEmailView,
 )
 
 urlpatterns = [
@@ -24,6 +27,9 @@ urlpatterns = [
     path("resend-otp-email/", ResendEmailOTPView.as_view(), name="resend-otp-email"),
     path("login/", LoginView.as_view(), name="login"),
     path("logout/", LogoutAPIView.as_view(), name="logout"),
+    path(
+        "deactivate-me/", DeactivateAccountView.as_view(), name="deactivate-my-acoount"
+    ),
     path("token/refresh/", CookieTokenRefreshView.as_view(), name="token-refresh"),
     path("protected/", ProtectedAPIView.as_view(), name="protected-api"),
     path("candidate/", CandidateListView.as_view(), name="get-all-candidate"),
@@ -44,5 +50,15 @@ urlpatterns = [
         "<int:id>",
         UserView.as_view(),
         name="user-by-id-view",
+    ),
+    path(
+        "reactivate/<str:token>/",
+        ReactivateAccountView.as_view(),
+        name="reactivate-account",
+    ),
+    path(
+        "reactivate-request/",
+        ReactivateAccountEmailView.as_view(),
+        name="reactivate-request",
     ),
 ]
