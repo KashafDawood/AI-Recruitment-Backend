@@ -167,6 +167,7 @@ class LoginSerializer(serializers.Serializer):
 
 
 class CandidateSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
     username = serializers.ReadOnlyField(source="user.username")
     email = serializers.ReadOnlyField(source="user.email")
     name = serializers.CharField(source="user.name", required=False)
@@ -182,6 +183,7 @@ class CandidateSerializer(serializers.ModelSerializer):
     class Meta:
         model = CandidateProfile
         fields = [
+            "id",
             "username",
             "name",
             "email",
@@ -218,6 +220,7 @@ class CandidateSerializer(serializers.ModelSerializer):
 
 
 class EmployerSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
     username = serializers.ReadOnlyField(source="user.username")
     email = serializers.ReadOnlyField(source="user.email")
     name = serializers.CharField(source="user.name", required=False)
@@ -237,6 +240,7 @@ class EmployerSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmployerProfile
         fields = [
+            "id",
             "username",
             "name",
             "email",

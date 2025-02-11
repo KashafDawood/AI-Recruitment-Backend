@@ -97,7 +97,7 @@ class PublishJobListingView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class JobListingView(generics.RetrieveUpdateDestroyAPIView):
+class MyJobListingView(generics.RetrieveUpdateDestroyAPIView):
     queryset = JobListing.objects.all()
     serializer_class = JobListingSerializer
     permission_classes = [IsAuthenticated, IsEmployerAndOwner]
@@ -115,3 +115,10 @@ class JobListingListView(generics.ListAPIView):
     queryset = JobListing.objects.all()
     serializer_class = JobListingSerializer
     permission_classes = [IsAuthenticated]
+
+
+class jobListingView(generics.RetrieveAPIView):
+    queryset = JobListing.objects.all()
+    serializer_class = JobListingSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = "id"
