@@ -1,10 +1,10 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
-from .serializer import GenerateJobListing, PublishJobListing
+from rest_framework import status, generics
+from .serializer import GenerateJobListing, PublishJobListing, JobListingSerializer
 from .ai_generating import generate_job_listing
 from rest_framework.permissions import IsAuthenticated
-from core.permissions import IsEmployer
+from core.permissions import IsEmployer, IsEmployerAndOwner
 import markdown
 from bs4 import BeautifulSoup
 from .models import JobListing
@@ -95,3 +95,17 @@ class PublishJobListingView(APIView):
                 status=status.HTTP_201_CREATED,
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class JobListingView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = JobListing.objects.all()
+    serializer_class = JobListingSerializer
+    permission_classes = [IsAuthenticated, IsEmployerAndOwner]
+    lookup_field = "id"
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)

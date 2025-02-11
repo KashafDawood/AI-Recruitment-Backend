@@ -24,3 +24,19 @@ class PublishJobListing(serializers.Serializer):
         max_length=100, required=False, allow_blank=True
     )
     job_type = serializers.CharField(max_length=10)
+
+
+class JobListingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = JobListing
+        fields = [
+            "id",
+            "title",
+            "location",
+            "description",
+            "experience_required",
+            "salary",
+            "job_type",
+            "created_at",
+        ]
+        read_only_fields = ["id", "created_at", "employer"]
