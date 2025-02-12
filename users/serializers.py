@@ -12,122 +12,24 @@ class SignupSerializer(serializers.ModelSerializer):
     )
     password = serializers.CharField(write_only=True)
 
-    # Optional fields for candidate profile
-    skills = serializers.CharField(required=False, allow_blank=True)
-    resume = serializers.FileField(required=False, allow_null=True)
-    bio = serializers.CharField(required=False, allow_blank=True)
-
-    # Optional fields for employer profile
-    company_name = serializers.CharField(required=False, allow_blank=True)
-    industry = serializers.CharField(required=False, allow_blank=True)
-    logo = serializers.ImageField(required=False, allow_null=True)
-
     class Meta:
         model = User
-        fields = [
-            "id",
-            "name",
-            "username",
-            "email",
-            "password",
-            "role",
-            # Candidate profile fields
-            "skills",
-            "resume",
-            "bio",
-            # Employer profile fields
-            "company_name",
-            "industry",
-            "logo",
-        ]
-
-    def validate(self, data):
-        if not data.get("role"):
-            raise serializers.ValidationError(
-                {"role": "Role is required for registration"}
-            )
-
-        role = data.get("role")
-
-        # Validate candidate-specific fields
-        if role == "candidate":
-            if not data.get("skills"):
-                raise serializers.ValidationError(
-                    {"skills": "Skills are required for candidate registration"}
-                )
-
-        # Validate employer-specific fields
-        elif role == "employer":
-            if not data.get("company_name"):
-                raise serializers.ValidationError(
-                    {
-                        "company_name": "Company name is required for employer registration"
-                    }
-                )
-            if not data.get("industry"):
-                raise serializers.ValidationError(
-                    {"industry": "Industry is required for employer registration"}
-                )
-
-        return data
+        fields = ["id", "name", "username", "email", "password", "role"]
 
     def create(self, validated_data):
-        # Extract profile-specific data
-        role = validated_data.get("role")
-
-        # Extract and remove profile fields from validated_data
-        candidate_fields = {
-            "skills": validated_data.pop("skills", ""),
-            "resume": validated_data.pop("resume", None),
-            "bio": validated_data.pop("bio", ""),
-        }
-
-        employer_fields = {
-            "company_name": validated_data.pop("company_name", ""),
-            "industry": validated_data.pop("industry", ""),
-            "logo": validated_data.pop("logo", None),
-        }
-
-        # Create user
-        user = User.objects.create_user(**validated_data)
+        # Extract password and create user
+        password = validated_data.pop("password")
+        user = User.objects.create(**validated_data)
+        user.set_password(password)
+        user.save()
 
         # Create corresponding profile based on role
-        if role == "candidate":
-            CandidateProfile.objects.create(user=user, **candidate_fields)
-        elif role == "employer":
-            EmployerProfile.objects.create(user=user, **employer_fields)
+        if user.role == "candidate":
+            CandidateProfile.objects.create(user=user)
+        elif user.role == "employer":
+            EmployerProfile.objects.create(user=user)
 
         return user
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data["certifications"] = instance.certifications
-        data["education"] = instance.education
-        if instance.role == "candidate":
-            try:
-                profile = instance.candidate_profile
-                data.update(
-                    {
-                        "skills": profile.skills,
-                        "resume": profile.resume.url if profile.resume else None,
-                        "bio": profile.bio,
-                    }
-                )
-            except CandidateProfile.DoesNotExist:
-                pass
-        elif instance.role == "employer":
-            try:
-                profile = instance.employer_profile
-                data.update(
-                    {
-                        "company_name": profile.company_name,
-                        "industry": profile.industry,
-                        "logo": profile.logo.url if profile.logo else None,
-                    }
-                )
-            except EmployerProfile.DoesNotExist:
-                pass
-        return data
 
 
 class LoginSerializer(serializers.Serializer):
