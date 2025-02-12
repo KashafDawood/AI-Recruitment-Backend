@@ -179,6 +179,7 @@ class CandidateSerializer(serializers.ModelSerializer):
     socials = serializers.JSONField(
         source="user.socials", required=False, allow_null=True
     )
+    resumes = serializers.JSONField(required=False)  # Add resumes field
 
     class Meta:
         model = CandidateProfile
@@ -192,8 +193,8 @@ class CandidateSerializer(serializers.ModelSerializer):
             "website",
             "socials",
             "skills",
-            "resume",
             "bio",
+            "resumes",  # Add resumes field
         ]
 
     def update(self, instance, validated_data):
@@ -213,8 +214,8 @@ class CandidateSerializer(serializers.ModelSerializer):
 
         # Update candidate-specific fields
         instance.skills = validated_data.get("skills", instance.skills)
-        instance.resume = validated_data.get("resume", instance.resume)
         instance.bio = validated_data.get("bio", instance.bio)
+        instance.resumes = validated_data.get("resumes", instance.resumes)
         instance.save()
         return instance
 

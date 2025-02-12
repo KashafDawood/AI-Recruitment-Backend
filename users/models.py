@@ -41,9 +41,7 @@ class CandidateProfile(models.Model):
         User, on_delete=models.CASCADE, related_name="candidate_profile"
     )
     skills = models.JSONField(default=list)
-    resume = models.FileField(
-        upload_to="resumes/", null=True, blank=True, storage=BackblazeB2Storage()
-    )
+    resumes = models.JSONField(default=dict)
     bio = models.TextField(null=True, blank=True)
 
     class Meta:
@@ -51,6 +49,28 @@ class CandidateProfile(models.Model):
 
     def __str__(self):
         return f"Candidate Profile: {self.user.username}"
+
+    def add_resume(self, resume_file, resume_name):
+        from django.utils import timezone
+        from core.b2_storage import BackblazeB2Storage
+
+        storage = BackblazeB2Storage()
+        resume_path = storage._save(resume_name, resume_file)
+
+        resume_data = {
+            "name": resume_name,
+            "resume": storage.url(resume_path),
+            "created_at": timezone.now().isoformat(),
+        }
+        self.resumes[resume_name] = resume_data
+        self.save()
+
+    def delete_resume(self, resume_name):
+        if resume_name in self.resumes:
+            del self.resumes[resume_name]
+            self.save()
+            return True
+        return False
 
 
 class EmployerProfile(models.Model):
