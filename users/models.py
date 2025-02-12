@@ -23,6 +23,8 @@ class User(AbstractUser):
     website = models.URLField(null=True, blank=True)
     socials = models.JSONField(null=True, blank=True)
     changeUsernameAt = models.DateTimeField(null=True, blank=True)
+    certifications = models.JSONField(default=list, blank=True)
+    education = models.JSONField(default=list, blank=True)
 
     class Meta:
         db_table = "users_user"

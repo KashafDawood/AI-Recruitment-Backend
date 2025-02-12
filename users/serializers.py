@@ -1,4 +1,3 @@
-import random
 from rest_framework import serializers
 from .models import User
 from .models import CandidateProfile, EmployerProfile
@@ -23,6 +22,10 @@ class SignupSerializer(serializers.ModelSerializer):
     industry = serializers.CharField(required=False, allow_blank=True)
     logo = serializers.ImageField(required=False, allow_null=True)
 
+    # Add certifications and education fields
+    certifications = serializers.JSONField(required=False)
+    education = serializers.JSONField(required=False)
+
     class Meta:
         model = User
         fields = [
@@ -40,6 +43,9 @@ class SignupSerializer(serializers.ModelSerializer):
             "company_name",
             "industry",
             "logo",
+            # Add certifications and education fields
+            "certifications",
+            "education",
         ]
 
     def validate(self, data):
@@ -89,17 +95,6 @@ class SignupSerializer(serializers.ModelSerializer):
             "logo": validated_data.pop("logo", None),
         }
 
-        # # Generate username from email
-        # email = validated_data["email"]
-        # username = email.split("@")[0]
-        # base_username = username
-        # num = random.randint(10, 99)
-        # while User.objects.filter(username=username).exists():
-        #     username = f"{base_username}{num}"
-        #     num = random.randint(10, 99)
-
-        # validated_data["username"] = username
-
         # Create user
         user = User.objects.create_user(**validated_data)
 
@@ -113,6 +108,8 @@ class SignupSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
+        data["certifications"] = instance.certifications
+        data["education"] = instance.education
         if instance.role == "candidate":
             try:
                 profile = instance.candidate_profile
@@ -180,6 +177,8 @@ class CandidateSerializer(serializers.ModelSerializer):
         source="user.socials", required=False, allow_null=True
     )
     resumes = serializers.JSONField(required=False)  # Add resumes field
+    certifications = serializers.JSONField(source="user.certifications", required=False)
+    education = serializers.JSONField(source="user.education", required=False)
 
     class Meta:
         model = CandidateProfile
@@ -195,7 +194,15 @@ class CandidateSerializer(serializers.ModelSerializer):
             "skills",
             "bio",
             "resumes",  # Add resumes field
+            "certifications",  # Add certifications field
+            "education",  # Add education field
         ]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["certifications"] = instance.user.certifications
+        data["education"] = instance.user.education
+        return data
 
     def update(self, instance, validated_data):
         # Retrieve nested user data
@@ -210,6 +217,10 @@ class CandidateSerializer(serializers.ModelSerializer):
             instance.user.website = user_data["website"]
         if "socials" in user_data:
             instance.user.socials = user_data["socials"]
+        instance.user.certifications = user_data.get(
+            "certifications", instance.user.certifications
+        )
+        instance.user.education = user_data.get("education", instance.user.education)
         instance.user.save()
 
         # Update candidate-specific fields
@@ -305,6 +316,8 @@ class UserSerializer(serializers.ModelSerializer):
             "phone",
             "website",
             "socials",
+            "certifications",  # Add certifications field
+            "education",  # Add education field
         ]
         read_only_fields = ["id", "username", "email", "role"]
 

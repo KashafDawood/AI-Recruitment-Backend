@@ -115,13 +115,11 @@ def generate_candidate_bio(candidate):
         education = parsed.get("education", education)
         experience = parsed.get("experience", experience)
         certifications = parsed.get("certifications", "Not provided")
-        languages = parsed.get("languages", "Not provided")
         candidate_details = f"""
         - **Name:** {name}
         - **Education:** {education}
         - **Experience:** {experience}
         - **Certifications:** {certifications}
-        - **Languages:** {languages}
         """
     else:
         candidate_details = f"""
@@ -144,7 +142,6 @@ def generate_candidate_bio(candidate):
         - Key Achievements (Bulleted list)
         - Technical Skills (Bulleted list)
         - Certifications (Bulleted list)
-        - Languages (Bulleted list)
         - Contact Information (Clear Call to Action)
         """
     client = OpenAI(
