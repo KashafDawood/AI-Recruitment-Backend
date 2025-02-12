@@ -1,29 +1,32 @@
 from django.urls import path
-from .views import (
+from .views.auth_views import (
     SignupView,
     LoginView,
+    LogoutAPIView,
     ProtectedAPIView,
     CookieTokenRefreshView,
-    LogoutAPIView,
-    CandidateMeView,
-    EmployerMeView,
-    CandidateListView,
-    EmployerListView,
-    UserView,
-    ChangePasswordView,
-    ChangeUsernameView,
     VerifyEmailOTPView,
     ResendEmailOTPView,
-    ForgetPasswordView,
-    ResetPasswordView,
-    DeactivateAccountView,
-    ReactivateAccountView,
-    ReactivateAccountEmailView,
+)
+from .views.candidate_views import (
+    CandidateMeView,
+    CandidateListView,
     DeleteResumeView,
     AddEducationView,
     AddCertificationView,
     EducationDetailView,
     CertificationDetailView,
+)
+from .views.employer_views import EmployerMeView, EmployerListView
+from .views.user_views import (
+    UserView,
+    ChangePasswordView,
+    ChangeUsernameView,
+    ForgetPasswordView,
+    ResetPasswordView,
+    DeactivateAccountView,
+    ReactivateAccountView,
+    ReactivateAccountEmailView,
 )
 
 urlpatterns = [
