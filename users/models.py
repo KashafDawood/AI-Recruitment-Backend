@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from cloudinary.models import CloudinaryField
 from django.db import models
+from core.b2_storage import BackblazeB2Storage
 
 
 class User(AbstractUser):
@@ -40,7 +41,9 @@ class CandidateProfile(models.Model):
         User, on_delete=models.CASCADE, related_name="candidate_profile"
     )
     skills = models.JSONField(default=list)
-    resume = models.FileField(upload_to="resumes/", null=True, blank=True)
+    resume = models.FileField(
+        upload_to="resumes/", null=True, blank=True, storage=BackblazeB2Storage()
+    )
     bio = models.TextField(null=True, blank=True)
 
     class Meta:

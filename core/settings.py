@@ -192,9 +192,16 @@ OPENAI_TOKEN = os.environ.get("GITHUB_TOKEN")
 OPENAI_ENDPOINT = "https://models.inference.ai.azure.com"
 OPENAI_MODEL = "gpt-4o"
 
+# cloudinary for images
 cloudinary.config(
     cloud_name=os.environ.get("CLOUD_NAME"),
     api_key=os.environ.get("CLOUDINARY_API_KEY"),
     api_secret=os.environ.get("CLOUDINARY_API_SECRET"),
 )
 DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
+
+# Backblaze B2 storage settings
+B2_KEY_ID = os.environ.get("B2_KEY_ID")
+B2_APP_KEY = os.environ.get("B2_APP_KEY")
+B2_BUCKET_NAME = os.environ.get("B2_BUCKET_NAME")
+RESUME_FILE_STORAGE = "core.backblaze_b2_storage.BackblazeB2Storage"
