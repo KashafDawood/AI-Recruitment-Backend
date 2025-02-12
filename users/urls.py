@@ -19,6 +19,7 @@ from .views import (
     DeactivateAccountView,
     ReactivateAccountView,
     ReactivateAccountEmailView,
+    DeleteResumeView,
 )
 
 urlpatterns = [
@@ -60,5 +61,10 @@ urlpatterns = [
         "reactivate-request/",
         ReactivateAccountEmailView.as_view(),
         name="reactivate-request",
+    ),
+    path(
+        "candidate/resume/<str:resume_name>",
+        DeleteResumeView.as_view(),
+        name="delete_resume",
     ),
 ]

@@ -38,4 +38,5 @@ class BackblazeB2Storage(Storage):
 
     def url(self, name):
         download_url = "https://f005.backblazeb2.com/file"
+        name = name.replace(" ", "+")  # Replace spaces with "+"
         return f"{download_url}/{self.bucket_name}/{name.replace('\\','/')}"

@@ -66,6 +66,12 @@ class SignupView(generics.CreateAPIView):
 
         generate_otp(user)
 
+        if user.role == "candidate":
+            candidate_profile = user.candidate_profile
+            resume_file = request.FILES.get("resume")
+            if resume_file:
+                candidate_profile.add_resume(resume_file, resume_file.name)
+
         return Response(
             {
                 "message": f"Successfully registered as {user.role}",
@@ -262,6 +268,23 @@ class CandidateMeView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_object(self):
         return self.request.user.candidate_profile
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop("partial", False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        resume_file = request.FILES.get("resume")
+        if resume_file:
+            candidate_profile = self.get_object()
+            candidate_profile.add_resume(resume_file, resume_file.name)
+
+        if getattr(instance, "_prefetched_objects_cache", None):
+            instance._prefetched_objects_cache = {}
+
+        return Response(serializer.data)
 
 
 class EmployerMeView(generics.RetrieveUpdateDestroyAPIView):
@@ -473,3 +496,16 @@ class ReactivateAccountEmailView(APIView):
                 {"error": "User with this email does not exist"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+
+class DeleteResumeView(APIView):
+    permission_classes = [IsAuthenticated, IsCandidate]
+
+    def delete(self, request, resume_name):
+        candidate_profile = request.user.candidate_profile
+        success = candidate_profile.delete_resume(resume_name)
+        if success:
+            return Response(
+                {"message": "Resume deleted successfully"}, status=status.HTTP_200_OK
+            )
+        return Response({"error": "Resume not found"}, status=status.HTTP_404_NOT_FOUND)
