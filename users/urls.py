@@ -20,6 +20,10 @@ from .views import (
     ReactivateAccountView,
     ReactivateAccountEmailView,
     DeleteResumeView,
+    AddEducationView,
+    AddCertificationView,
+    EducationDetailView,
+    CertificationDetailView,
 )
 
 urlpatterns = [
@@ -29,7 +33,7 @@ urlpatterns = [
     path("login/", LoginView.as_view(), name="login"),
     path("logout/", LogoutAPIView.as_view(), name="logout"),
     path(
-        "deactivate-me/", DeactivateAccountView.as_view(), name="deactivate-my-acoount"
+        "deactivate-me/", DeactivateAccountView.as_view(), name="deactivate-my-account"
     ),
     path("token/refresh/", CookieTokenRefreshView.as_view(), name="token-refresh"),
     path("protected/", ProtectedAPIView.as_view(), name="protected-api"),
@@ -66,5 +70,17 @@ urlpatterns = [
         "candidate/resume/<str:resume_name>",
         DeleteResumeView.as_view(),
         name="delete_resume",
+    ),
+    path("education/", AddEducationView.as_view(), name="add-education"),
+    path("certification/", AddCertificationView.as_view(), name="add-certification"),
+    path(
+        "education/<str:degree_name>",
+        EducationDetailView.as_view(),
+        name="education-detail",
+    ),
+    path(
+        "certification/<str:certification_name>",
+        CertificationDetailView.as_view(),
+        name="certification-detail",
     ),
 ]

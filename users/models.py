@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from cloudinary.models import CloudinaryField
 from django.db import models
 from core.b2_storage import BackblazeB2Storage
+from django.utils import timezone
 
 
 class User(AbstractUser):
@@ -23,8 +24,8 @@ class User(AbstractUser):
     website = models.URLField(null=True, blank=True)
     socials = models.JSONField(null=True, blank=True)
     changeUsernameAt = models.DateTimeField(null=True, blank=True)
-    certifications = models.JSONField(default=list, blank=True)
-    education = models.JSONField(default=list, blank=True)
+    certifications = models.JSONField(default=dict, blank=True)
+    education = models.JSONField(default=dict, blank=True)
 
     class Meta:
         db_table = "users_user"
@@ -53,8 +54,6 @@ class CandidateProfile(models.Model):
         return f"Candidate Profile: {self.user.username}"
 
     def add_resume(self, resume_file, resume_name):
-        from django.utils import timezone
-        from core.b2_storage import BackblazeB2Storage
 
         storage = BackblazeB2Storage()
         resume_path = storage._save(resume_name, resume_file)

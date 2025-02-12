@@ -22,10 +22,6 @@ class SignupSerializer(serializers.ModelSerializer):
     industry = serializers.CharField(required=False, allow_blank=True)
     logo = serializers.ImageField(required=False, allow_null=True)
 
-    # Add certifications and education fields
-    certifications = serializers.JSONField(required=False)
-    education = serializers.JSONField(required=False)
-
     class Meta:
         model = User
         fields = [
@@ -43,9 +39,6 @@ class SignupSerializer(serializers.ModelSerializer):
             "company_name",
             "industry",
             "logo",
-            # Add certifications and education fields
-            "certifications",
-            "education",
         ]
 
     def validate(self, data):
@@ -177,8 +170,12 @@ class CandidateSerializer(serializers.ModelSerializer):
         source="user.socials", required=False, allow_null=True
     )
     resumes = serializers.JSONField(required=False)  # Add resumes field
-    certifications = serializers.JSONField(source="user.certifications", required=False)
-    education = serializers.JSONField(source="user.education", required=False)
+    certifications = serializers.JSONField(
+        read_only=True, source="user.certifications", required=False
+    )
+    education = serializers.JSONField(
+        read_only=True, source="user.education", required=False
+    )
 
     class Meta:
         model = CandidateProfile
@@ -316,10 +313,17 @@ class UserSerializer(serializers.ModelSerializer):
             "phone",
             "website",
             "socials",
-            "certifications",  # Add certifications field
-            "education",  # Add education field
+            "certifications",
+            "education",
         ]
-        read_only_fields = ["id", "username", "email", "role"]
+        read_only_fields = [
+            "id",
+            "username",
+            "email",
+            "role",
+            "certifications",
+            "education",
+        ]
 
 
 class ForgetPassword(serializers.Serializer):
@@ -328,3 +332,24 @@ class ForgetPassword(serializers.Serializer):
 
 class ResetPassword(serializers.Serializer):
     new_password = serializers.CharField(required=True)
+
+
+class EducationSerializer(serializers.Serializer):
+    degree_name = serializers.CharField(max_length=255)
+    institute_name = serializers.CharField(max_length=255)
+    start_date = serializers.DateField()
+    end_date = serializers.DateField(required=False, allow_null=True)
+    is_studying = serializers.BooleanField(default=False)
+
+    def validate(self, data):
+        if data["is_studying"] and data.get("end_date"):
+            raise serializers.ValidationError(
+                "End date should be null if currently studying."
+            )
+        return data
+
+
+class CertificationSerializer(serializers.Serializer):
+    certification_name = serializers.CharField(max_length=255)
+    source = serializers.CharField(max_length=255)
+    date_obtained = serializers.DateField(required=False, allow_null=True)
