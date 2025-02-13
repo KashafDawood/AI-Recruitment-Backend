@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import GenerateJobPostingView, GenerateCandidateBioView
+from .views import GenerateJobPostingView, GenerateCandidateBioView, GenerateBlogView
 
 urlpatterns = [
     path(
@@ -12,4 +12,5 @@ urlpatterns = [
         GenerateCandidateBioView.as_view(),
         name="generate-candidate-bio",
     ),
+    path("generate-blog-post/", GenerateBlogView.as_view(), name="generate-blog-post"),
 ]

@@ -1,9 +1,10 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializer import GenerateJobListing
+from .serializer import GenerateJobListing, GenerateBlogSerializer
 from .JobList_generator import generate_job_listing
 from .bio_generator import generate_candidate_bio
+from .blog_post_generator import generate_blog_post
 from rest_framework.permissions import IsAuthenticated
 from core.permissions import IsEmployer, IsCandidate
 import markdown
@@ -74,3 +75,28 @@ class GenerateCandidateBioView(APIView):
         formatted_bio = soup.prettify(formatter="html").replace("\n", " ")
 
         return Response({"bio": formatted_bio}, status=status.HTTP_200_OK)
+
+
+class GenerateBlogView(APIView):
+    permission_classes = [IsAuthenticated, IsEmployer]
+
+    def post(self, request, *args, **kwargs):
+        serializer = GenerateBlogSerializer(data=request.data)
+        if serializer.is_valid():
+            title = serializer["blog_title"]
+            description = serializer["blog_description"]
+            blog_length = serializer["blog_length"]
+
+            blog = generate_blog_post(title, description, blog_length)
+
+            # Remove Markdown code block markers (```markdown ... ```)
+            if blog.startswith("```markdown"):
+                blog = blog.strip("```markdown").strip("```")
+
+            # Convert Markdown to HTML
+            formatted_blog = markdown.markdown(blog)
+            soup = BeautifulSoup(formatted_blog, "html.parser")
+            formatted_blog = soup.prettify(formatter="html").replace("\n", " ")
+
+            return Response({"blog": formatted_blog}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
