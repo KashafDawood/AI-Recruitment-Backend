@@ -157,30 +157,40 @@ def generate_candidate_bio(candidate):
         set(filter(None, certifications))
     )  # Remove empty values and duplicates
 
+    # Determine the most suitable data to use
+    final_education = (
+        education
+        if education != "Not provided"
+        else parsed.get("education", "Not provided")
+    )
+    final_experience = (
+        experience
+        if experience != "Not provided"
+        else parsed.get("experience", "Not provided")
+    )
+    final_skills = skills if skills else parsed.get("skills", [])
+    final_certifications = (
+        certifications if certifications else parsed.get("certifications", [])
+    )
+
     # Construct candidate details
     candidate_details = f"""
     - **Name:** {name}
-    - **Education:** {json.dumps(education, indent=2)}
-    - **Experience:** {experience}
-    - **Skills:** {skills}
-    - **Certifications:** {', '.join(certifications)}
+    - **Education:** {json.dumps(final_education, indent=2)}
+    - **Experience:** {final_experience}
+    - **Skills:** {final_skills}
+    - **Certifications:** {', '.join(final_certifications)}
     """
 
     # AI prompt for generating candidate bio
     prompt = f"""
-    IMPORTANT:
-    - Generate a well-formatted candidate bio using Markdown. Ensure proper sectioning and formatting without inserting unnecessary newline characters. Don't use \\n in the output.
+    Write a concise and engaging candidate bio suitable for LinkedIn, job applications, or professional profiles. Keep it under 150-200 words, highlighting expertise, achievements, and career aspirations.
 
     Candidate Details:
     {candidate_details}
 
-    **Structure the output as follows (avoid extra newline characters):**
-    - Education, Experience, Skills (Formatted clearly)
-    - A compelling bio description (2-3 paragraphs)
-    - Key Achievements (Bulleted list)
-    - Technical Skills (Bulleted list)
-    - Certifications (Bulleted list)
-    - Contact Information (Clear Call to Action)
+    Example Output:
+    "[Candidate’s Name] is a dedicated and results-oriented [Job Title] with [X] years of experience in [Industry]. Skilled in [Key Skills], they have successfully contributed to [mention impact, projects, or achievements]. Passionate about [mention career focus], they thrive in [work environment, e.g., collaborative teams, fast-paced settings]. Seeking opportunities to leverage expertise in [mention job role or industry] and make a meaningful impact in [specific field]."
     """
 
     client = OpenAI(

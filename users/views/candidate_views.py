@@ -98,6 +98,12 @@ class AddCertificationView(APIView):
                 "date_obtained"
             ].isoformat()
 
+        # Ensure certifications is a list
+        if isinstance(user.certifications, str):
+            user.certifications = json.loads(user.certifications)
+        if not isinstance(user.certifications, list):
+            user.certifications = []
+
         user.certifications.append(certification_entry)
         user.save()
         return Response(
