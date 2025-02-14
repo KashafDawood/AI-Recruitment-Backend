@@ -4,6 +4,9 @@ import re
 from io import BytesIO
 import requests
 from openai import OpenAI
+import nltk
+from nltk.tokenize import word_tokenize, sent_tokenize
+from nltk.corpus import stopwords
 from django.conf import settings
 from users.models import CandidateProfile
 import PyPDF2
@@ -26,54 +29,29 @@ def parse_docx_resume(file_stream):
     return text
 
 
-def extract_info_using_ai(text):
-    """Extract structured information from the resume text using OpenAI."""
-    prompt = f"""
-    Extract the following information from the resume text below in JSON format:
-    - education
-    - experience
-    - certifications
-    - languages
-    
-    Resume:
-    {text}
-    
-    The output must be valid JSON with keys "education", "experience", "certifications", and "languages", and no additional text.
-    """
+def extract_info_using_nltk(text):
+    """Extract structured information from the resume text using NLTK."""
+    sentences = sent_tokenize(text)
+    words = word_tokenize(text)
+    stop_words = set(stopwords.words("english"))
+    filtered_words = [w for w in words if w.lower() not in stop_words]
 
-    client = OpenAI(
-        base_url=settings.OPENAI_ENDPOINT,
-        api_key=settings.OPENAI_TOKEN,
-    )
+    # Dummy extraction logic for demonstration purposes
+    education = [sent for sent in sentences if "education" in sent.lower()]
+    experience = [sent for sent in sentences if "experience" in sent.lower()]
+    certifications = [sent for sent in sentences if "certification" in sent.lower()]
+    languages = [
+        word
+        for word in filtered_words
+        if word.lower() in ["english", "spanish", "french"]
+    ]
 
-    completion = client.chat.completions.create(
-        model=settings.OPENAI_MODEL,
-        messages=[
-            {
-                "role": "system",
-                "content": "You are an assistant that extracts resume details in JSON format.",
-            },
-            {"role": "user", "content": prompt},
-        ],
-        temperature=0.0,
-    )
-
-    response_content = completion.choices[0].message.content.strip()
-
-    # Ensure valid JSON extraction
-    if response_content.startswith("```") and response_content.endswith("```"):
-        response_content = re.sub(r"^```json\s*", "", response_content)
-        response_content = re.sub(r"\s*```$", "", response_content)
-
-    try:
-        data = json.loads(response_content)
-    except json.JSONDecodeError:
-        data = {
-            "education": "Not provided",
-            "experience": "Not provided",
-            "certifications": [],
-            "languages": [],
-        }
+    data = {
+        "education": education if education else "Not provided",
+        "experience": experience if experience else "Not provided",
+        "certifications": certifications,
+        "languages": languages,
+    }
 
     return data
 
@@ -109,7 +87,7 @@ def parse_resume(resume_url):
     else:
         raise ValueError("Unsupported file format")
 
-    return extract_info_using_ai(text)
+    return extract_info_using_nltk(text)
 
 
 def generate_candidate_bio(candidate):
