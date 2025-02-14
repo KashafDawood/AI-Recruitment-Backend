@@ -4,7 +4,6 @@ import re
 from io import BytesIO
 import requests
 from openai import OpenAI
-import nltk
 from nltk.tokenize import word_tokenize, sent_tokenize
 from nltk.corpus import stopwords
 from django.conf import settings
