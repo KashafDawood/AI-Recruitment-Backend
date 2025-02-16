@@ -21,6 +21,9 @@ class GenerateBlogSerializer(serializers.Serializer):
         ("800 words", "800 words"),
         ("1000 words", "1000 words"),
     ]
+    blog_keywords = serializers.CharField(
+        max_length=255, required=False, allow_blank=True
+    )
     blog_length = serializers.ChoiceField(
         choices=BLOG_LENGTH_CHOICES, allow_blank=True, required=False
     )

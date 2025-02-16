@@ -85,9 +85,10 @@ class GenerateBlogView(APIView):
         if serializer.is_valid():
             title = serializer["blog_title"]
             description = serializer["blog_description"]
+            keywords = serializer["blog_keywords"]
             blog_length = serializer["blog_length"]
 
-            blog = generate_blog_post(title, description, blog_length)
+            blog = generate_blog_post(title, description, keywords, blog_length)
 
             # Remove Markdown code block markers (```markdown ... ```)
             if blog.startswith("```markdown"):
