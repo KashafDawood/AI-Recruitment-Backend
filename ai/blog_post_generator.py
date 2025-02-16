@@ -5,11 +5,13 @@ from django.conf import settings
 def generate_blog_post(
     blog_title,
     blog_description,
+    focus_keywords,
     blog_length="600 words",
 ):
 
     blog_detail = {
         "blog_breif": blog_description,
+        "focus_keywords": focus_keywords,
         "blog_length": blog_length,
     }
 

@@ -69,5 +69,4 @@ class IsOwnerOrEmployerReadOnly(BasePermission):
 
 class IsEmployerAndOwner(BasePermission):
     def has_object_permission(self, request, view, obj):
-        # Check if the user is authenticated and is the employer who created the job listing
         return request.user.is_authenticated and obj.employer == request.user
