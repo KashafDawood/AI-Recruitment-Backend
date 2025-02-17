@@ -37,7 +37,7 @@ urlpatterns = [
     path("api/jobs/", include("jobs.urls")),
     path("api/ai/", include("ai.urls")),
     path("api/blogs/", include("blogs.urls")),
-    #path("api/applications/",include("applications.urls")),
+    path("api/applications/",include("applications.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # Custom error handlers
