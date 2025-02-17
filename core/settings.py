@@ -55,6 +55,7 @@ INSTALLED_APPS += [
     "jobs",
     "ai",
     "blogs",
+    "applications",
 ]
 
 MIDDLEWARE = [
