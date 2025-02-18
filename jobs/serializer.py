@@ -15,6 +15,8 @@ class PublishJobListing(serializers.Serializer):
 
 
 class JobListingSerializer(serializers.ModelSerializer):
+    employer = serializers.ReadOnlyField(source="employer.username")
+
     class Meta:
         model = JobListing
         fields = [
@@ -25,6 +27,9 @@ class JobListingSerializer(serializers.ModelSerializer):
             "experience_required",
             "salary",
             "job_type",
+            "job_location_type",
+            "job_status",
             "created_at",
+            "employer",
         ]
         read_only_fields = ["id", "created_at", "employer"]
