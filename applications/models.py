@@ -4,6 +4,7 @@ from django.utils import timezone
 
 # Create your models here.
 
+
 class Application(models.Model):
     APPLICATION_STATUS_CHOICES = [
         ("applied", "Applied"),
@@ -15,10 +16,13 @@ class Application(models.Model):
     candidate = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="applications"
     )
-    job = models.ForeignKey("jobs.JobListing", on_delete=models.CASCADE, related_name="applications")
+    job = models.ForeignKey(
+        "jobs.JobListing", on_delete=models.CASCADE, related_name="applications"
+    )
     application_status = models.CharField(
         max_length=20, choices=APPLICATION_STATUS_CHOICES, default="applied"
     )
+    resume = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
