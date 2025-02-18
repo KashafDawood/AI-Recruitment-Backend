@@ -6,13 +6,18 @@ from .serializer import ApplicationSerializer
 
 # Create your views here.
 
-class ApplicationListCreateView(generics.ListCreateAPIView):
+
+class ApplicationListView(generics.ListCreateAPIView):
     queryset = Application.objects.all()
     serializer_class = ApplicationSerializer
     permission_classes = [IsAuthenticated]
 
-    def perform_create(self, serializer):
-        serializer.save(candidate=self.request.user)
+    def get_queryset(self):
+        job_id = self.request.query_params.get("job_id", None)
+        if job_id is not None:
+            return self.queryset.filter(job_id=job_id)
+        return self.queryset
+
 
 class ApplicationDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Application.objects.all()
