@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializer import GenerateJobListing, GenerateBlogSerializer
+from .serializer import GenerateJobListing, GenerateBlogSerializer, FilterBioSerializer
 from .JobList_generator import generate_job_listing
 from .bio_generator import generate_candidate_bio
 from .blog_post_generator import generate_blog_post
@@ -9,7 +9,8 @@ from rest_framework.permissions import IsAuthenticated
 from core.permissions import IsEmployer, IsCandidate
 import markdown
 from bs4 import BeautifulSoup
-
+from django.http import JsonResponse
+from .bio_filter import filter_bio
 
 class GenerateJobPostingView(APIView):
     permission_classes = [IsAuthenticated, IsEmployer]
@@ -51,7 +52,6 @@ class GenerateJobPostingView(APIView):
             return Response({"job_listing": formatted_job}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
 class GenerateCandidateBioView(APIView):
     permission_classes = [IsAuthenticated, IsCandidate]
 
@@ -76,7 +76,6 @@ class GenerateCandidateBioView(APIView):
 
         return Response({"bio": formatted_bio}, status=status.HTTP_200_OK)
 
-
 class GenerateBlogView(APIView):
     permission_classes = [IsAuthenticated, IsEmployer]
 
@@ -100,4 +99,18 @@ class GenerateBlogView(APIView):
             formatted_blog = soup.prettify(formatter="html").replace("\n", " ")
 
             return Response({"blog": formatted_blog}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class FilterBioView(APIView):
+    permission_classes = [IsAuthenticated, IsCandidate]
+
+    def post(self, request, *args, **kwargs):
+        serializer = FilterBioSerializer(data=request.data)
+        if serializer.is_valid():
+            bio = serializer.validated_data['bio']
+            cleaned_bio = filter_bio(bio)
+            if cleaned_bio:
+                return Response({'cleaned_bio': cleaned_bio}, status=status.HTTP_200_OK)
+            else:
+                return Response({'message': 'Bio is already clean'}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

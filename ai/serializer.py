@@ -27,3 +27,7 @@ class GenerateBlogSerializer(serializers.Serializer):
     blog_length = serializers.ChoiceField(
         choices=BLOG_LENGTH_CHOICES, allow_blank=True, required=False
     )
+
+
+class FilterBioSerializer(serializers.Serializer):
+    bio = serializers.CharField()

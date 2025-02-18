@@ -34,4 +34,4 @@ def filter_bio(bio):
     )
 
     cleaned_bio = completion.choices[0].message.content.strip()
-    return cleaned_bio
+    return cleaned_bio if cleaned_bio != bio else None
