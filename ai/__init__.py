@@ -1,1 +1,3 @@
-# (This file marks the directory as a package)
+import ai.nltk_setup
+
+ai.nltk_setup.download_nltk_data()

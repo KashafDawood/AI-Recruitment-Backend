@@ -1,6 +1,5 @@
 import os
 import json
-import re
 from io import BytesIO
 import requests
 from openai import OpenAI
