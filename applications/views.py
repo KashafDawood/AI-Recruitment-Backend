@@ -1,9 +1,16 @@
-from rest_framework import generics, status
+from rest_framework import generics, status, permissions
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from core.permissions import IsCandidate, IsJobEmployer
 from .models import Application
-from .serializer import ApplicationSerializer, createApplicationSerializer
+from .serializer import ApplicationSerializer, createApplicationSerializer, UpdateApplicationStatusSerializer
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .models import Application
+from .serializer import UpdateApplicationStatusSerializer
+from rest_framework.permissions import IsAuthenticated
+from core.permissions import IsEmployer
 
 
 class CreateApplicationView(generics.CreateAPIView):
@@ -50,3 +57,20 @@ class JobApplicationsListView(generics.ListAPIView):
     def get_queryset(self):
         job_id = self.kwargs.get("job_id")
         return Application.objects.filter(job_id=job_id)
+
+
+class UpdateApplicationStatusView(generics.UpdateAPIView):
+    queryset = Application.objects.all()
+    serializer_class = UpdateApplicationStatusSerializer
+    permission_classes = [IsAuthenticated, IsJobEmployer]
+    lookup_field = "id"
+
+    def get_queryset(self):
+        user = self.request.user
+        job_id = self.kwargs.get("job_id")
+        application_id = self.kwargs.get("id")
+        return Application.objects.filter(job__employer=user, job_id=job_id, id=application_id)
+    
+    def perform_update(self, serializer):
+        serializer.save()
+
