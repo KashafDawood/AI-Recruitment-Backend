@@ -1,4 +1,5 @@
 from rest_framework.permissions import BasePermission
+from jobs.models import JobListing
 
 
 class RoleBasedPermission(BasePermission):
@@ -70,3 +71,21 @@ class IsOwnerOrEmployerReadOnly(BasePermission):
 class IsEmployerAndOwner(BasePermission):
     def has_object_permission(self, request, view, obj):
         return request.user.is_authenticated and obj.employer == request.user
+
+
+class IsJobEmployer(BasePermission):
+    """
+    Custom permission to only allow employers of a job to access the job's applications.
+    """
+
+    message = "You must be the employer of this job to view its applications."
+
+    def has_permission(self, request, view):
+        job_id = view.kwargs.get("job_id")
+        if job_id:
+            try:
+                job = JobListing.objects.get(id=job_id)
+                return job.employer == request.user
+            except JobListing.DoesNotExist:
+                return False
+        return False
