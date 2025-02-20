@@ -59,18 +59,31 @@ class JobApplicationsListView(generics.ListAPIView):
         return Application.objects.filter(job_id=job_id)
 
 
-class UpdateApplicationStatusView(generics.UpdateAPIView):
-    queryset = Application.objects.all()
-    serializer_class = UpdateApplicationStatusSerializer
+class UpdateApplicationStatusView(APIView):
     permission_classes = [IsAuthenticated, IsJobEmployer]
-    lookup_field = "id"
 
-    def get_queryset(self):
-        user = self.request.user
+    def patch(self, request, *args, **kwargs):
+        user = request.user
         job_id = self.kwargs.get("job_id")
-        application_id = self.kwargs.get("id")
-        return Application.objects.filter(job__employer=user, job_id=job_id, id=application_id)
-    
-    def perform_update(self, serializer):
-        serializer.save()
+        application_ids = request.data.get("application_ids", [])
+        new_status = request.data.get("application_status")
+
+        if not application_ids or not new_status:
+            return Response(
+                {"error": "application_ids and application_status are required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        applications = Application.objects.filter(job__employer=user, job_id=job_id, id__in=application_ids)
+        existing_ids = applications.values_list('id', flat=True)
+        missing_ids = set(application_ids) - set(existing_ids)
+
+        applications.update(application_status=new_status)
+
+        response_data = {
+            "updated_applications": list(existing_ids),
+            "missing_applications": list(missing_ids),
+        }
+
+        return Response(response_data, status=status.HTTP_200_OK)
 

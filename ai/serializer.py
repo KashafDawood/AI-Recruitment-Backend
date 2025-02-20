@@ -29,5 +29,3 @@ class GenerateBlogSerializer(serializers.Serializer):
     )
 
 
-class FilterBioSerializer(serializers.Serializer):
-    bio = serializers.CharField()

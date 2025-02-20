@@ -12,7 +12,7 @@ urlpatterns = [
         JobApplicationsListView.as_view(),
         name="job-applications-list",
     ),
-    path('job/<int:job_id>/update-status/<int:id>/', 
+    path('job/<int:job_id>/update-status/', 
          UpdateApplicationStatusView.as_view(), 
          name='update-application-status'),
 ]
