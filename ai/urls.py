@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import GenerateJobPostingView, GenerateCandidateBioView, GenerateBlogView, FilterBioView
+from .views import GenerateJobPostingView, GenerateCandidateBioView, GenerateBlogView
 
 urlpatterns = [
     path(
@@ -13,5 +13,4 @@ urlpatterns = [
         name="generate-candidate-bio",
     ),
     path("generate-blog-post/", GenerateBlogView.as_view(), name="generate-blog-post"),
-    path("filter-bio/", FilterBioView.as_view(), name="filter-bio"),
 ]

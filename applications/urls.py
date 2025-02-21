@@ -2,6 +2,7 @@ from django.urls import path
 from .views import (
     CreateApplicationView,
     JobApplicationsListView,
+    UpdateApplicationStatusView,
 )
 
 urlpatterns = [
@@ -11,4 +12,7 @@ urlpatterns = [
         JobApplicationsListView.as_view(),
         name="job-applications-list",
     ),
+    path('job/<int:job_id>/update-status/', 
+         UpdateApplicationStatusView.as_view(), 
+         name='update-application-status'),
 ]

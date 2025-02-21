@@ -1,9 +1,16 @@
-from rest_framework import generics, status
+from rest_framework import generics, status, permissions
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from core.permissions import IsCandidate, IsJobEmployer
 from .models import Application
-from .serializer import ApplicationSerializer, createApplicationSerializer
+from .serializer import ApplicationSerializer, createApplicationSerializer, UpdateApplicationStatusSerializer
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .models import Application
+from .serializer import UpdateApplicationStatusSerializer
+from rest_framework.permissions import IsAuthenticated
+from core.permissions import IsEmployer
 
 
 class CreateApplicationView(generics.CreateAPIView):
@@ -50,3 +57,33 @@ class JobApplicationsListView(generics.ListAPIView):
     def get_queryset(self):
         job_id = self.kwargs.get("job_id")
         return Application.objects.filter(job_id=job_id)
+
+
+class UpdateApplicationStatusView(APIView):
+    permission_classes = [IsAuthenticated, IsJobEmployer]
+
+    def patch(self, request, *args, **kwargs):
+        user = request.user
+        job_id = self.kwargs.get("job_id")
+        application_ids = request.data.get("application_ids", [])
+        new_status = request.data.get("application_status")
+
+        if not application_ids or not new_status:
+            return Response(
+                {"error": "application_ids and application_status are required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        applications = Application.objects.filter(job__employer=user, job_id=job_id, id__in=application_ids)
+        existing_ids = applications.values_list('id', flat=True)
+        missing_ids = set(application_ids) - set(existing_ids)
+
+        applications.update(application_status=new_status)
+
+        response_data = {
+            "updated_applications": list(existing_ids),
+            "missing_applications": list(missing_ids),
+        }
+
+        return Response(response_data, status=status.HTTP_200_OK)
+
