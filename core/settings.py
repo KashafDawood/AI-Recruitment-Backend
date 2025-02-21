@@ -146,7 +146,7 @@ SIMPLE_JWT = {
 # CORS Configuration
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:FrontUrl",
+    os.environ.get("FRONTEND_URL"),
 ]
 
 # Internationalization
