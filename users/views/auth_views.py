@@ -160,12 +160,14 @@ class LoginView(generics.GenericAPIView):
                     "name": user.name,
                     "username": user.username,
                 },
-                "access": access_token,
-                "refresh": str(refresh),
             }
         )
 
-        set_http_only_cookie(res=response, access_token=access_token, refresh=refresh)
+        # Use helper function to set cookies
+        set_http_only_cookie(response, access_token, refresh)
+
+        # Add CORS headers explicitly
+        response["Access-Control-Allow-Credentials"] = "true"
 
         return response
 
