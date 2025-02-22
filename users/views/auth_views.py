@@ -211,8 +211,8 @@ class CookieTokenRefreshView(TokenRefreshView):
                 key=settings.SIMPLE_JWT["AUTH_COOKIE"],
                 value=access_token,
                 httponly=True,
-                secure=settings.SIMPLE_JWT["AUTH_COOKIE_SECURE"],
-                samesite=settings.SIMPLE_JWT["AUTH_COOKIE_SAMESITE"],
+                secure=True,  # Ensure secure attribute is set to True
+                samesite="None",  # Updated SameSite attribute
                 expires=datetime.datetime.now(UTC)
                 + settings.SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"],
             )

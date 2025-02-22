@@ -9,8 +9,8 @@ def set_http_only_cookie(res, access_token, refresh):
         key=settings.SIMPLE_JWT["AUTH_COOKIE"],
         value=access_token,
         httponly=True,
-        secure=settings.SIMPLE_JWT["AUTH_COOKIE_SECURE"],
-        samesite=settings.SIMPLE_JWT["AUTH_COOKIE_SAMESITE"],
+        secure=True,  # Ensure secure attribute is set to True
+        samesite="None",  # Updated SameSite attribute
         expires=datetime.datetime.now(UTC)
         + settings.SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"],
     )
@@ -20,8 +20,8 @@ def set_http_only_cookie(res, access_token, refresh):
         key=settings.SIMPLE_JWT["AUTH_COOKIE_REFRESH"],
         value=str(refresh),
         httponly=True,
-        secure=settings.SIMPLE_JWT["AUTH_COOKIE_SECURE"],
-        samesite=settings.SIMPLE_JWT["AUTH_COOKIE_SAMESITE"],
+        secure=True,  # Ensure secure attribute is set to True
+        samesite="None",  # Updated SameSite attribute
         expires=datetime.datetime.now(UTC)
         + settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"],
     )

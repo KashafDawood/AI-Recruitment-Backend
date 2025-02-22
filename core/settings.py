@@ -139,14 +139,15 @@ SIMPLE_JWT = {
     "AUTH_COOKIE": "access_token",
     "AUTH_COOKIE_REFRESH": "refresh_token",
     "AUTH_COOKIE_HTTP_ONLY": True,
-    "AUTH_COOKIE_SECURE": False,
-    "AUTH_COOKIE_SAMESITE": "Lax",
+    "AUTH_COOKIE_SECURE": True,
+    "AUTH_COOKIE_SAMESITE": "None",
 }
 
 # CORS Configuration
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
-    os.environ.get("FRONTEND_URL"),
+    "http://127.1.1.1:3000",
+    "http://localhost:3000",
 ]
 
 # Internationalization
