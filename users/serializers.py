@@ -7,6 +7,7 @@ from django.contrib.auth import authenticate
 class SignupSerializer(serializers.ModelSerializer):
     # Fields for basic user registration
     id = serializers.IntegerField(read_only=True)
+    username = serializers.CharField(read_only=True)
     role = serializers.ChoiceField(
         choices=User.ROLE_CHOICES, required=True, allow_null=False
     )
@@ -19,6 +20,17 @@ class SignupSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         # Extract password and create user
         password = validated_data.pop("password")
+
+        # Generate a unique username using email
+        email = validated_data.get("email")
+        username_base = email.split("@")[0]
+        username = username_base
+        counter = 1
+        while User.objects.filter(username=username).exists():
+            username = f"{username_base}{counter}"
+            counter += 1
+        validated_data["username"] = username
+
         user = User.objects.create(**validated_data)
         user.set_password(password)
         user.save()
