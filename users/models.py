@@ -26,6 +26,7 @@ class User(AbstractUser):
     changeUsernameAt = models.DateTimeField(null=True, blank=True)
     certifications = models.JSONField(default=dict, blank=True)
     education = models.JSONField(default=dict, blank=True)
+    is_verified = models.BooleanField(default=False)
 
     class Meta:
         db_table = "users_user"
@@ -33,10 +34,6 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
-
-    @property
-    def is_verified(self):
-        return self.emailotp_set.filter(verified=True).exists()
 
 
 class CandidateProfile(models.Model):

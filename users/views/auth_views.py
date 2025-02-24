@@ -84,25 +84,28 @@ class VerifyEmailOTPView(APIView):
                     {"error": "User not provided in request body"},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+
         try:
-            with transaction.atomic():  # ensure OTP update is atomic
+            with transaction.atomic():
                 otp_obj = (
                     EmailOTP.objects.select_for_update()
-                    .filter(user__email=user.email, otp=otp_submitted, verified=False)
+                    .filter(
+                        user__email=user.email,
+                        otp=otp_submitted,
+                        verified=False,
+                        expires_at__gt=timezone.now(),
+                    )
                     .latest("created_at")
                 )
 
-                if timezone.now() > otp_obj.expires_at:
-                    return Response(
-                        {"error": "OTP has expired"},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-
                 otp_obj.verified = True
                 otp_obj.save()
+
+                User.objects.filter(id=user.id).update(is_verified=True)
+
         except EmailOTP.DoesNotExist:
             return Response(
-                {"error": "Invalid OTP or email"},
+                {"error": "Invalid or expired OTP"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
