@@ -41,6 +41,7 @@ class GetMeView(APIView):
         else:
             profile_data = {}
 
+        profile_data["role"] = user.role
         return Response(profile_data)
 
 
