@@ -41,9 +41,7 @@ class GetMeView(APIView):
         else:
             profile_data = {}
 
-        combined_data = {"user": user_data, "profile": profile_data}
-
-        return Response(combined_data)
+        return Response(profile_data)
 
 
 class ChangePasswordView(APIView):
