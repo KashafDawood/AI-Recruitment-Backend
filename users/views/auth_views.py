@@ -101,7 +101,9 @@ class VerifyEmailOTPView(APIView):
                 otp_obj.verified = True
                 otp_obj.save()
 
-                User.objects.filter(id=user.id).update(is_verified=True)
+                # Updated to modify the user instance directly
+                user.is_verified = True
+                user.save()
 
         except EmailOTP.DoesNotExist:
             return Response(

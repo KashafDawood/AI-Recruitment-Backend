@@ -20,6 +20,7 @@ from .views.candidate_views import (
 from .views.employer_views import EmployerMeView, EmployerListView
 from .views.user_views import (
     UserView,
+    GetMeView,
     ChangePasswordView,
     ChangeUsernameView,
     ForgetPasswordView,
@@ -86,4 +87,5 @@ urlpatterns = [
         CertificationDetailView.as_view(),
         name="certification-detail",
     ),
+    path("me/", GetMeView.as_view(), name="Get Me"),
 ]

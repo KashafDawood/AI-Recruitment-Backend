@@ -13,6 +13,8 @@ from ..serializers import (
     ChangeUsername,
     ForgetPassword,
     ResetPassword,
+    CandidateSerializer,
+    EmployerSerializer,
 )
 from emails.views import send_forget_password_email, send_reactivate_account_email
 from ..helper import set_http_only_cookie
@@ -23,6 +25,25 @@ class UserView(generics.RetrieveAPIView):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = "id"
+
+
+class GetMeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        user_data = UserSerializer(user).data
+
+        if user.role == "candidate":
+            profile_data = CandidateSerializer(user.candidate_profile).data
+        elif user.role == "employer":
+            profile_data = EmployerSerializer(user.employer_profile).data
+        else:
+            profile_data = {}
+
+        combined_data = {"user": user_data, "profile": profile_data}
+
+        return Response(combined_data)
 
 
 class ChangePasswordView(APIView):
