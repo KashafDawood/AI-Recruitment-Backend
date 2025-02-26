@@ -43,6 +43,8 @@ class CandidateProfile(models.Model):
     skills = models.JSONField(default=list)
     resumes = models.JSONField(default=dict)
     bio = models.TextField(null=True, blank=True)
+    experience = models.PositiveIntegerField(default=0)
+    interests = models.CharField(max_length=500, blank=True, default="")
 
     class Meta:
         db_table = "users_candidate_profile"

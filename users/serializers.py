@@ -90,6 +90,10 @@ class CandidateSerializer(serializers.ModelSerializer):
     education = serializers.JSONField(
         read_only=True, source="user.education", required=False
     )
+    experience = serializers.IntegerField(required=False)  # Changed to IntegerField
+    interests = serializers.CharField(
+        required=False, allow_blank=True
+    )  # Changed to CharField
 
     class Meta:
         model = CandidateProfile
@@ -107,6 +111,8 @@ class CandidateSerializer(serializers.ModelSerializer):
             "resumes",  # Add resumes field
             "certifications",  # Add certifications field
             "education",  # Add education field
+            "experience",
+            "interests",
         ]
 
     def to_representation(self, instance):
@@ -138,6 +144,8 @@ class CandidateSerializer(serializers.ModelSerializer):
         instance.skills = validated_data.get("skills", instance.skills)
         instance.bio = validated_data.get("bio", instance.bio)
         instance.resumes = validated_data.get("resumes", instance.resumes)
+        instance.experience = validated_data.get("experience", instance.experience)
+        instance.interests = validated_data.get("interests", instance.interests)
         instance.save()
         return instance
 
