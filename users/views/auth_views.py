@@ -204,24 +204,50 @@ class CookieTokenRefreshView(TokenRefreshView):
             )
 
         try:
-            refresh = RefreshToken(refresh_token)
-            access_token = str(refresh.access_token)
+            # Create serializer with the token from cookie
+            serializer = self.get_serializer(data={"refresh": refresh_token})
+            serializer.is_valid(raise_exception=True)
 
+            # Get validated data containing access and possibly new refresh token
+            validated_data = serializer.validated_data
+            access_token = validated_data.get("access")
+
+            # Create response with access token
             response = Response(
                 {"message": "Token refreshed", "access": access_token},
                 status=status.HTTP_200_OK,
             )
+
+            # Set the access token in cookie
             response.set_cookie(
                 key=settings.SIMPLE_JWT["AUTH_COOKIE"],
                 value=access_token,
                 httponly=True,
-                secure=True,  # Ensure secure attribute is set to True
-                samesite="None",  # Updated SameSite attribute
+                secure=True,
+                samesite="None",
                 expires=datetime.datetime.now(UTC)
                 + settings.SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"],
             )
+
+            # If ROTATE_REFRESH_TOKENS is enabled, set the new refresh token in cookie
+            if (
+                settings.SIMPLE_JWT["ROTATE_REFRESH_TOKENS"]
+                and "refresh" in validated_data
+            ):
+                new_refresh_token = validated_data.get("refresh")
+                response.set_cookie(
+                    key=settings.SIMPLE_JWT["AUTH_COOKIE_REFRESH"],
+                    value=new_refresh_token,
+                    httponly=True,
+                    secure=True,
+                    samesite="None",
+                    expires=datetime.datetime.now(UTC)
+                    + settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"],
+                )
+
             return response
         except Exception as e:
             return Response(
-                {"error": "Invalid refresh token"}, status=status.HTTP_401_UNAUTHORIZED
+                {"error": "Invalid refresh token", "details": str(e)},
+                status=status.HTTP_401_UNAUTHORIZED,
             )

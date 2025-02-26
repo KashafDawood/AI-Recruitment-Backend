@@ -25,3 +25,5 @@ def set_http_only_cookie(res, access_token, refresh):
         expires=datetime.datetime.now(UTC)
         + settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"],
     )
+
+    return res
