@@ -1,6 +1,9 @@
 from .email import send_simple_message
 from .models import EmailOTP
 from django.template.loader import render_to_string
+from django.core.mail import send_mail
+from django.conf import settings
+from django.utils import timezone
 
 
 def send_otp_email(email, otp):
@@ -13,9 +16,36 @@ def send_otp_email(email, otp):
 
 
 def generate_otp(user):
+    """
+    Generate and send OTP to user email
+    """
+    # First, invalidate any existing unused OTPs for this user
+    EmailOTP.objects.filter(
+        user=user, verified=False, expires_at__gt=timezone.now()
+    ).update(expires_at=timezone.now())
+
+    # Generate a new OTP
     otp_code = EmailOTP.generate_otp()
-    EmailOTP.objects.create(user=user, otp=otp_code)
-    send_otp_email(user.email, otp_code)
+
+    # Create and save the OTP
+    otp_obj = EmailOTP(
+        user=user,
+        otp=otp_code,
+    )
+    otp_obj.save()
+
+    # Send email with OTP
+    subject = "Email Verification OTP"
+    message = f"Your OTP code is: {otp_code}. It will expire in 10 minutes."
+    email_from = settings.DEFAULT_FROM_EMAIL
+    recipient_list = [user.email]
+
+    try:
+        send_mail(subject, message, email_from, recipient_list)
+        return True
+    except Exception as e:
+        print(f"Failed to send OTP email: {e}")
+        return False
 
 
 def send_forget_password_email(email, url):
