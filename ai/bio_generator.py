@@ -160,13 +160,13 @@ def generate_candidate_bio(candidate):
 
     # AI prompt for generating candidate bio
     prompt = f"""
-    Write a concise and engaging candidate bio suitable for LinkedIn, job applications, or professional profiles. Keep it under 150-200 words, highlighting expertise, achievements, and career aspirations.
+    Write a concise and engaging candidate bio in FIRST PERSON perspective (using "I am" instead of third person), suitable for LinkedIn, job applications, or professional profiles. Keep it under 200-400 words, highlighting expertise, achievements, and career aspirations.
 
     Candidate Details:
     {candidate_details}
 
     Example Output:
-    "[Candidate’s Name] is a dedicated and results-oriented [Job Title] with [X] years of experience in [Industry]. Skilled in [Key Skills], they have successfully contributed to [mention impact, projects, or achievements]. Passionate about [mention career focus], they thrive in [work environment, e.g., collaborative teams, fast-paced settings]. Seeking opportunities to leverage expertise in [mention job role or industry] and make a meaningful impact in [specific field]."
+    "I am a dedicated and results-oriented [Job Title] with [X] years of experience in [Industry]. Skilled in [Key Skills], I have successfully contributed to [mention impact, projects, or achievements]. I am passionate about [mention career focus] and thrive in [work environment, e.g., collaborative teams, fast-paced settings]. I am seeking opportunities to leverage my expertise in [mention job role or industry] and make a meaningful impact in [specific field]."
     """
 
     client = OpenAI(
