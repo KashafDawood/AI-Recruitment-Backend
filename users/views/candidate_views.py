@@ -74,8 +74,14 @@ class AddEducationView(APIView):
         ):
             education_entry["end_date"] = education_entry["end_date"].isoformat()
 
-        user.education[education_entry["degree_name"]] = education_entry
+        # Handle education as a list instead of a dictionary
+        if user.education is None:
+            user.education = []
+
+        # Since user.education is a list, just append the new entry
+        user.education.append(education_entry)
         user.save()
+
         return Response(
             {"message": "Education added successfully"}, status=status.HTTP_201_CREATED
         )
@@ -119,30 +125,52 @@ class EducationDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get_object(self):
         user = self.request.user
         degree_name = self.kwargs.get("degree_name")
-        for education in user.education.values():
-            if education["degree_name"] == degree_name:
+
+        # Handle education as a list
+        for idx, education in enumerate(user.education):
+            if education.get("degree_name") == degree_name:
+                # Store index for later use
+                self._education_index = idx
                 return education
+        return None
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
+        if instance is None:
+            return Response(
+                {"error": "Education not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         user = request.user
-        user.education[instance["degree_name"]].update(serializer.validated_data)
-        user.save()
+
+        # Update the education entry in the list
+        if hasattr(self, "_education_index"):
+            user.education[self._education_index].update(serializer.validated_data)
+            user.save()
+            return Response(
+                {"message": "Education updated successfully"}, status=status.HTTP_200_OK
+            )
+
         return Response(
-            {"message": "Education updated successfully"}, status=status.HTTP_200_OK
+            {"error": "Education not found"}, status=status.HTTP_404_NOT_FOUND
         )
 
     def destroy(self, request, *args, **kwargs):
         user = request.user
         degree_name = self.kwargs.get("degree_name")
-        if degree_name in user.education:
-            del user.education[degree_name]
-            user.save()
-            return Response(
-                {"message": "Education deleted successfully"}, status=status.HTTP_200_OK
-            )
+
+        # Remove education from list
+        for idx, education in enumerate(user.education):
+            if education.get("degree_name") == degree_name:
+                user.education.pop(idx)
+                user.save()
+                return Response(
+                    {"message": "Education deleted successfully"},
+                    status=status.HTTP_200_OK,
+                )
+
         return Response(
             {"error": "Education not found"}, status=status.HTTP_404_NOT_FOUND
         )
