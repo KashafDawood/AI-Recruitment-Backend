@@ -110,8 +110,7 @@ class ForgetPasswordView(APIView):
             user_data = User.objects.get(email=useremail)
             reset_token = RefreshToken.for_user(user_data).access_token
             # Update URL to use lowercase 'resetpassword'
-            reset_url = f"{request.scheme}://{request.get_host()}/api/users/resetpassword/{reset_token}"
-
+            reset_url = f"{request.scheme}://{settings.FRONT_END_URL}/resetpassword/{reset_token}"
             # send reset password email
             send_forget_password_email(useremail, reset_url)
 

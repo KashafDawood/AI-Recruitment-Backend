@@ -210,3 +210,6 @@ B2_KEY_ID = os.environ.get("B2_KEY_ID")
 B2_APP_KEY = os.environ.get("B2_APP_KEY")
 B2_BUCKET_NAME = os.environ.get("B2_BUCKET_NAME")
 RESUME_FILE_STORAGE = "core.backblaze_b2_storage.BackblazeB2Storage"
+
+#Front end url
+FRONT_END_URL="localhost:3000"
