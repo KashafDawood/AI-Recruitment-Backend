@@ -160,7 +160,7 @@ def generate_candidate_bio(candidate):
 
     # AI prompt for generating candidate bio
     prompt = f"""
-    Write a concise and engaging candidate bio in FIRST PERSON perspective (using "I am" instead of third person), suitable for LinkedIn, job applications, or professional profiles. Keep it under 200-400 words, highlighting expertise, achievements, and career aspirations.
+    Write a concise and engaging candidate bio in FIRST PERSON perspective (using "I am" instead of third person), suitable for LinkedIn, job applications, or professional profiles. Keep it under 200-400 words, highlighting expertise, achievements, and career aspirations, dont add quotation mark at the begining and end, highlight the important keywords in the bio.
 
     Candidate Details:
     {candidate_details}
