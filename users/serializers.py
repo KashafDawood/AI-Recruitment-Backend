@@ -261,7 +261,6 @@ class EducationSerializer(serializers.Serializer):
     institute_name = serializers.CharField(max_length=255)
     start_date = serializers.DateField()
     end_date = serializers.DateField(required=False, allow_null=True)
-    is_studying = serializers.BooleanField(default=False)
 
     def validate(self, data):
         if data["is_studying"] and data.get("end_date"):
@@ -274,4 +273,5 @@ class EducationSerializer(serializers.Serializer):
 class CertificationSerializer(serializers.Serializer):
     certification_name = serializers.CharField(max_length=255)
     source = serializers.CharField(max_length=255)
+    source_url = serializers.URLField(required=False, allow_blank=True)
     date_obtained = serializers.DateField(required=False, allow_null=True)
