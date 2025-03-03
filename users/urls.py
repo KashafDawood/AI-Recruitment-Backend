@@ -21,6 +21,8 @@ from .views.employer_views import EmployerMeView, EmployerListView
 from .views.user_views import (
     UserView,
     GetMeView,
+    UpdateMeView,
+    DeleteMeView,
     ChangePasswordView,
     ChangeUsernameView,
     ForgetPasswordView,
@@ -88,4 +90,6 @@ urlpatterns = [
         name="certification-detail",
     ),
     path("me/", GetMeView.as_view(), name="Get Me"),
+    path("update-me/", UpdateMeView.as_view(), name="Update Me"),
+    path("delete-me/", DeleteMeView.as_view(), name="Delete Me"),
 ]

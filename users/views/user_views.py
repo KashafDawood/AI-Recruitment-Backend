@@ -226,3 +226,63 @@ class ReactivateAccountEmailView(APIView):
                 {"error": "User with this email does not exist"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+
+class UpdateMeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request):
+        user = request.user
+        if user.role == "candidate":
+            serializer = CandidateSerializer(
+                user.candidate_profile, data=request.data, partial=True
+            )
+        elif user.role == "employer":
+            serializer = EmployerSerializer(
+                user.employer_profile, data=request.data, partial=True
+            )
+        else:
+            return Response(
+                {"error": "Invalid user role"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {"message": "Profile updated successfully", "data": serializer.data},
+                status=status.HTTP_200_OK,
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request):
+        # Reuse the put method for partial updates
+        return self.put(request)
+
+
+class DeleteMeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request):
+        user = request.user
+        # Save user ID for response
+        user_id = user.id
+        user_role = user.role
+
+        # Delete the user (which will cascade to the profile through the database)
+        user.delete()
+
+        # Return a success response with the deleted user info
+        response = Response(
+            {
+                "message": "Account deleted successfully",
+                "user_id": user_id,
+                "role": user_role,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+        # Clear authentication cookies
+        response.delete_cookie(settings.SIMPLE_JWT["AUTH_COOKIE"])
+        response.delete_cookie(settings.SIMPLE_JWT["AUTH_COOKIE_REFRESH"])
+
+        return response
