@@ -131,7 +131,7 @@ from datetime import timedelta
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
     "UPDATE_LAST_LOGIN": False,
@@ -211,5 +211,5 @@ B2_APP_KEY = os.environ.get("B2_APP_KEY")
 B2_BUCKET_NAME = os.environ.get("B2_BUCKET_NAME")
 RESUME_FILE_STORAGE = "core.backblaze_b2_storage.BackblazeB2Storage"
 
-#Front end url
-FRONT_END_URL="localhost:3000"
+# Front end url
+FRONT_END_URL = "localhost:3000"
