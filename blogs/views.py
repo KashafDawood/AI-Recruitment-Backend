@@ -24,6 +24,11 @@ class BlogDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = BlogSerializer
     lookup_field = "slug"
 
+    def get_permissions(self):
+        if self.request.method in ['PUT', 'PATCH', 'DELETE']:
+            self.permission_classes = [IsAuthenticated, IsEmployer]
+        return super().get_permissions()
+
 
 class LatestBlogsView(generics.ListAPIView):
     serializer_class = BlogSerializer
