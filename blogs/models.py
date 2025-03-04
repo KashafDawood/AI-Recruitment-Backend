@@ -1,6 +1,6 @@
 from django.db import models
 from django.conf import settings
-from django.utils import timezone
+from cloudinary.models import CloudinaryField
 
 
 class Blog(models.Model):
@@ -12,6 +12,10 @@ class Blog(models.Model):
 
     title = models.CharField(max_length=255)
     content = models.TextField()
+    thumbnail = CloudinaryField(
+        null=True,
+        blank=True,
+    )
     keywords = models.CharField(max_length=255, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
