@@ -49,6 +49,7 @@ class BlogSerializer(serializers.ModelSerializer):
             "content",
             "keywords",
             "status",
+            "slug",
         ]
         read_only_fields = ["created_at", "updated_at", "slug", "employer"]
 
