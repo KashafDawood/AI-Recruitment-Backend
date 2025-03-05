@@ -16,6 +16,8 @@ from .views.candidate_views import (
     AddCertificationView,
     EducationDetailView,
     CertificationDetailView,
+    GenerateBioView,
+    GenerateBioAIView
 )
 from .views.employer_views import EmployerMeView, EmployerListView
 from .views.user_views import (
@@ -92,4 +94,6 @@ urlpatterns = [
     path("me/", GetMeView.as_view(), name="Get Me"),
     path("update-me/", UpdateMeView.as_view(), name="Update Me"),
     path("delete-me/", DeleteMeView.as_view(), name="Delete Me"),
+    path("candidate/generate-bio/", GenerateBioView.as_view(), name="generate-bio"),
+    path("candidate/generate-bio-ai/", GenerateBioAIView.as_view(), name="generate-bio-ai"),
 ]

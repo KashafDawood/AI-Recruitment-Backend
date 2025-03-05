@@ -8,9 +8,13 @@ from ..serializers import (
     CandidateSerializer,
     EducationSerializer,
     CertificationSerializer,
+    GenerateBioSerializer,
+    CandidateBioSerializer
 )
 from datetime import date
 import json
+from ai.bio_generator import generate_candidate_bio
+from ai.bio_filter import filter_bio
 
 
 class CandidateMeView(generics.RetrieveUpdateDestroyAPIView):
@@ -261,3 +265,30 @@ class CertificationDetailView(generics.RetrieveUpdateDestroyAPIView):
         return Response(
             {"error": "Certification not found"}, status=status.HTTP_404_NOT_FOUND
         )
+
+
+class GenerateBioView(APIView):
+    permission_classes = [IsAuthenticated, IsCandidate]
+
+    def post(self, request):
+        serializer = GenerateBioSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        bio = serializer.validated_data["bio"]
+        candidate_profile = request.user.candidate_profile
+        # Use CandidateBioSerializer to handle bio filtering
+        bio_serializer = CandidateBioSerializer(candidate_profile, data={"bio": bio}, context={'request': request})
+        bio_serializer.is_valid(raise_exception=True)
+        bio_serializer.save()
+        return Response({"bio": bio_serializer.data["bio"]}, status=status.HTTP_200_OK)
+
+
+class GenerateBioAIView(APIView):
+    permission_classes = [IsAuthenticated, IsCandidate]
+
+    def post(self, request):
+        user = request.user
+        bio = generate_candidate_bio(user)
+        candidate_profile = user.candidate_profile
+        candidate_profile.bio = bio
+        candidate_profile.save()
+        return Response({"bio": bio}, status=status.HTTP_200_OK)

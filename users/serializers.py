@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import User
 from .models import CandidateProfile, EmployerProfile
 from django.contrib.auth import authenticate
+from ai.bio_filter import filter_bio
 
 
 class SignupSerializer(serializers.ModelSerializer):
@@ -275,3 +276,26 @@ class CertificationSerializer(serializers.Serializer):
     source = serializers.CharField(max_length=255)
     source_url = serializers.URLField(required=False, allow_blank=True)
     date_obtained = serializers.DateField(required=False, allow_null=True)
+
+
+class GenerateBioSerializer(serializers.Serializer):
+    bio = serializers.CharField(required=True)
+
+
+class CandidateBioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CandidateProfile
+        fields = ['bio']
+
+    def update(self, instance, validated_data):
+        bio = validated_data.get('bio', instance.bio)
+        request = self.context.get('request', None)
+        
+        # Check if the bio is being updated by the user
+        if request and not request.path.endswith('/generate-bio-ai/'):
+            bio = filter_bio(bio)
+        
+        instance.bio = bio
+        instance.save()
+        return instance
+
