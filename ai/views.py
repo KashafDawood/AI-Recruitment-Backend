@@ -1,7 +1,11 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializer import GenerateJobListing, GenerateBlogSerializer
+from .serializer import (
+    GenerateJobListing,
+    GenerateBlogSerializer,
+    BestCandidateSerializer,
+)
 from .JobList_generator import generate_job_listing
 from .bio_generator import generate_candidate_bio
 from .blog_post_generator import generate_blog_post
@@ -9,8 +13,8 @@ from rest_framework.permissions import IsAuthenticated
 from core.permissions import IsEmployer, IsCandidate
 import markdown
 from bs4 import BeautifulSoup
-from django.http import JsonResponse
-from .bio_filter import filter_bio
+from .candidate_recommender import recommend_best_candidate
+
 
 class GenerateJobPostingView(APIView):
     permission_classes = [IsAuthenticated, IsEmployer]
@@ -52,6 +56,7 @@ class GenerateJobPostingView(APIView):
             return Response({"job_listing": formatted_job}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class GenerateCandidateBioView(APIView):
     permission_classes = [IsAuthenticated, IsCandidate]
 
@@ -76,16 +81,17 @@ class GenerateCandidateBioView(APIView):
 
         return Response({"bio": formatted_bio}, status=status.HTTP_200_OK)
 
+
 class GenerateBlogView(APIView):
     permission_classes = [IsAuthenticated, IsEmployer]
 
     def post(self, request, *args, **kwargs):
         serializer = GenerateBlogSerializer(data=request.data)
         if serializer.is_valid():
-            title = serializer["blog_title"]
-            description = serializer["blog_description"]
-            keywords = serializer["blog_keywords"]
-            blog_length = serializer["blog_length"]
+            title = serializer.validated_data["blog_title"]
+            description = serializer.validated_data["blog_description"]
+            keywords = serializer.validated_data["blog_keywords"]
+            blog_length = serializer.validated_data["blog_length"]
 
             blog = generate_blog_post(title, description, keywords, blog_length)
 
@@ -99,4 +105,28 @@ class GenerateBlogView(APIView):
             formatted_blog = soup.prettify(formatter="html").replace("\n", " ")
 
             return Response({"blog": formatted_blog}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class BestCandidateRecommenderView(APIView):
+    permission_classes = [IsAuthenticated, IsEmployer]
+
+    def post(self, request, *args, **kwargs):
+        serializer = BestCandidateSerializer(data=request.data)
+        if serializer.is_valid():
+            applications = serializer.validated_data["applications"]
+            description = serializer.validated_data["job_description"]
+
+            result = recommend_best_candidate(applications, description)
+
+            # Remove Markdown code block markers (```markdown ... ```)
+            if result.startswith("```markdown"):
+                result = result.strip("```markdown").strip("```")
+
+            # Convert Markdown to HTML
+            formatted_result = markdown.markdown(result)
+            soup = BeautifulSoup(formatted_result, "html.parser")
+            formatted_result = soup.prettify(formatter="html").replace("\n", " ")
+
+            return Response({"result": formatted_result}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
