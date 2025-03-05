@@ -248,6 +248,11 @@ class UpdateMeView(APIView):
 
         if serializer.is_valid():
             serializer.save()
+
+            if user.role == "candidate" and request.FILES.get("resume"):
+                resume_file = request.FILES.get("resume")
+                user.candidate_profile.add_resume(resume_file, resume_file.name)
+
             return Response(
                 {"message": "Profile updated successfully", "data": serializer.data},
                 status=status.HTTP_200_OK,
