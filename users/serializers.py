@@ -278,24 +278,6 @@ class CertificationSerializer(serializers.Serializer):
     date_obtained = serializers.DateField(required=False, allow_null=True)
 
 
-class GenerateBioSerializer(serializers.Serializer):
+class BioSerializer(serializers.Serializer):
     bio = serializers.CharField(required=True)
-
-
-class CandidateBioSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CandidateProfile
-        fields = ['bio']
-
-    def update(self, instance, validated_data):
-        bio = validated_data.get('bio', instance.bio)
-        request = self.context.get('request', None)
-        
-        # Check if the bio is being updated by the user
-        if request and not request.path.endswith('/generate-bio-ai/'):
-            bio = filter_bio(bio)
-        
-        instance.bio = bio
-        instance.save()
-        return instance
 

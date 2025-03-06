@@ -8,8 +8,7 @@ from ..serializers import (
     CandidateSerializer,
     EducationSerializer,
     CertificationSerializer,
-    GenerateBioSerializer,
-    CandidateBioSerializer
+    BioSerializer,
 )
 from datetime import date
 import json
@@ -267,28 +266,17 @@ class CertificationDetailView(generics.RetrieveUpdateDestroyAPIView):
         )
 
 
-class GenerateBioView(APIView):
+class UpdateBioView(APIView):
     permission_classes = [IsAuthenticated, IsCandidate]
 
     def post(self, request):
-        serializer = GenerateBioSerializer(data=request.data)
+        serializer = BioSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         bio = serializer.validated_data["bio"]
         candidate_profile = request.user.candidate_profile
-        # Use CandidateBioSerializer to handle bio filtering
-        bio_serializer = CandidateBioSerializer(candidate_profile, data={"bio": bio}, context={'request': request})
-        bio_serializer.is_valid(raise_exception=True)
-        bio_serializer.save()
-        return Response({"bio": bio_serializer.data["bio"]}, status=status.HTTP_200_OK)
 
+        bio = filter_bio(bio)
 
-class GenerateBioAIView(APIView):
-    permission_classes = [IsAuthenticated, IsCandidate]
-
-    def post(self, request):
-        user = request.user
-        bio = generate_candidate_bio(user)
-        candidate_profile = user.candidate_profile
         candidate_profile.bio = bio
         candidate_profile.save()
-        return Response({"bio": bio}, status=status.HTTP_200_OK)
+        return Response({"bio": candidate_profile.bio}, status=status.HTTP_200_OK)

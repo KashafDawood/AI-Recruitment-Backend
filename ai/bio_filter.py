@@ -18,6 +18,7 @@ def filter_bio(bio):
     - Retain the original intent while improving clarity and professionalism if necessary.  
     - Expand the bio to make it more detailed, engaging, and attractive while keeping it concise and relevant.  
     - Provide only the refined bio text in HTML format without any additional notes or prefixes.  
+    - Write a concise and engaging candidate bio in FIRST PERSON perspective (using "I am" instead of third person), suitable for LinkedIn, job applications, or professional profiles. Keep it under 200-400 words, highlighting expertise, achievements, and career aspirations. Format the bio using HTML tags, including <strong> for important keywords and <em> for emphasis.  
 
     **Candidate Bio:**  
     {bio}  
@@ -42,5 +43,11 @@ def filter_bio(bio):
     )
 
     cleaned_bio = completion.choices[0].message.content.strip()
+
+    # Remove ```html and ``` from the generated bio
+    if cleaned_bio.startswith("```html"):
+        cleaned_bio = cleaned_bio[7:]
+    if cleaned_bio.endswith("```"):
+        cleaned_bio = cleaned_bio[:-3]
 
     return cleaned_bio
