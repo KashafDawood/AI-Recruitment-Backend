@@ -30,9 +30,5 @@ class GenerateBlogSerializer(serializers.Serializer):
 
 
 class BestCandidateSerializer(serializers.Serializer):
-    applications = serializers.ListField(
-        help_text="List of candidate applications to evaluate"
-    )
-    job_description = serializers.CharField(
-        help_text="Job description to match candidates against"
-    )
+    applications = serializers.ListField()
+    job_id = serializers.IntegerField()

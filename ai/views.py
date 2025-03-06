@@ -14,7 +14,7 @@ from core.permissions import IsEmployer, IsCandidate
 import markdown
 from bs4 import BeautifulSoup
 from .candidate_recommender import recommend_best_candidate
-import json
+from jobs.models import JobListing
 
 
 class GenerateJobPostingView(APIView):
@@ -116,9 +116,16 @@ class BestCandidateRecommenderView(APIView):
         serializer = BestCandidateSerializer(data=request.data)
         if serializer.is_valid():
             applications = serializer.validated_data["applications"]
-            description = serializer.validated_data["job_description"]
+            job_id = serializer.validated_data["job_id"]
 
-            result = recommend_best_candidate(applications, description)
-
-            return Response({"result": result}, status=status.HTTP_200_OK)
+            try:
+                job = JobListing.objects.get(id=job_id)
+                description = job.description
+                result = recommend_best_candidate(applications, description)
+                return Response({"result": result}, status=status.HTTP_200_OK)
+            except Exception as e:
+                return Response(
+                    {"error": f"Failed to process recommendation: {str(e)}"},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
