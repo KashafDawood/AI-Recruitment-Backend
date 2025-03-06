@@ -29,3 +29,6 @@ class GenerateBlogSerializer(serializers.Serializer):
     )
 
 
+class BestCandidateSerializer(serializers.Serializer):
+    applications = serializers.ListField()
+    job_id = serializers.IntegerField()
