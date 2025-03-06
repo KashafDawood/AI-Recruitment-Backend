@@ -14,6 +14,7 @@ from core.permissions import IsEmployer, IsCandidate
 import markdown
 from bs4 import BeautifulSoup
 from .candidate_recommender import recommend_best_candidate
+import json
 
 
 class GenerateJobPostingView(APIView):
@@ -119,14 +120,5 @@ class BestCandidateRecommenderView(APIView):
 
             result = recommend_best_candidate(applications, description)
 
-            # Remove Markdown code block markers (```markdown ... ```)
-            if result.startswith("```markdown"):
-                result = result.strip("```markdown").strip("```")
-
-            # Convert Markdown to HTML
-            formatted_result = markdown.markdown(result)
-            soup = BeautifulSoup(formatted_result, "html.parser")
-            formatted_result = soup.prettify(formatter="html").replace("\n", " ")
-
-            return Response({"result": formatted_result}, status=status.HTTP_200_OK)
+            return Response({"result": result}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
