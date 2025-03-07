@@ -75,3 +75,15 @@ class jobListingView(generics.RetrieveAPIView):
     serializer_class = JobListingSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = "id"
+
+
+class MyJobListingsView(generics.ListAPIView):
+
+    serializer_class = JobListingSerializer
+    permission_classes = [IsAuthenticated, IsEmployerAndOwner]
+
+    def get_queryset(self):
+        """Return only job listings created by the current user"""
+        return JobListing.objects.filter(employer=self.request.user).order_by(
+            "-created_at"
+        )
