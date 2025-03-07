@@ -4,7 +4,7 @@ import json
 
 
 def generate_job_listing(
-    requirements,
+    description,
     job_title=None,
     company=None,
     location=None,
@@ -16,19 +16,21 @@ def generate_job_listing(
     - Job Title: {job_title}
     - Company: {company}
     - Location: {location}
-    - Requirements: {requirements}
+    - Short description: {description}
     - Experience: {experience_required}
     - Salary: {salary_range}
     
     IMPORTANT: Return the response as a structured JSON object with the following fields:
     - title: Job title
-    - meta: Object containing company, location, experience, and salary
+    - company: company
+    - location: location
+    - experience: experience
+    - salary: salary
     - description: Array of paragraphs for the job description
     - responsibilities: Array of key responsibilities
     - required_qualifications: Array of required skills and qualifications
     - preferred_qualifications: Array of preferred skills and qualifications
     - benefits: Array of benefits and reasons to join
-    - application_instructions: Application process details
     """
 
     client = OpenAI(

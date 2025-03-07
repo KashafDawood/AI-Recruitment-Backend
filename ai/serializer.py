@@ -5,7 +5,7 @@ class GenerateJobListing(serializers.Serializer):
     job_title = serializers.CharField(max_length=255, required=False, allow_blank=True)
     company = serializers.CharField(max_length=255, required=False, allow_blank=True)
     location = serializers.CharField(max_length=255, required=False, allow_blank=True)
-    requirements = serializers.CharField(max_length=1000)
+    description = serializers.CharField(max_length=1000)
     experience_required = serializers.CharField(
         max_length=255, required=False, allow_blank=True
     )

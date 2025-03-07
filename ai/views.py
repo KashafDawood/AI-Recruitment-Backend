@@ -26,14 +26,14 @@ class GenerateJobPostingView(APIView):
             job_title = serializer.validated_data["job_title"]
             company = serializer.validated_data["company"]
             location = serializer.validated_data["location"]
-            requirements = serializer.validated_data["requirements"]
+            description = serializer.validated_data["description"]
             experience_required = serializer.validated_data["experience_required"]
             salary_range = serializer.validated_data.get(
                 "salary_range", "Not specified"
             )
 
             job_listing = generate_job_listing(
-                requirements,
+                description,
                 job_title,
                 company,
                 location,
