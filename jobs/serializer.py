@@ -8,7 +8,7 @@ class PublishJobListing(serializers.Serializer):
     location = serializers.CharField(max_length=255)
     experience = serializers.CharField(max_length=255)
     salary = serializers.CharField(max_length=100, required=False)
-    description = serializers.ListField(child=serializers.CharField(), required=False)
+    description = serializers.ListField(child=serializers.CharField())
     responsibilities = serializers.ListField(
         child=serializers.CharField(), required=False
     )
