@@ -145,7 +145,7 @@ def recommend_best_candidate(applications, job_description, limit=5, minimum_sco
     try:
         completion = client.chat.completions.create(
             model=settings.OPENAI_MODEL,
-            response_format={"type": "json_object"},  # Ensure JSON response
+            response_format={"type": "json_object"},
             messages=[
                 {
                     "role": "system",
@@ -153,7 +153,7 @@ def recommend_best_candidate(applications, job_description, limit=5, minimum_sco
                 },
                 {"role": "user", "content": prompt},
             ],
-            temperature=0.3,  # Lower temperature for more consistent, analytical results
+            temperature=0.3,
         )
 
         # Parse the response to ensure it's valid JSON
