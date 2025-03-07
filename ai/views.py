@@ -108,8 +108,20 @@ class BestCandidateRecommenderView(APIView):
             try:
                 job = JobListing.objects.get(id=job_id)
                 description = job.description
-                result = recommend_best_candidate(applications, description)
+                responsibilities = job.responsibilities
+                required_qualifications = job.required_qualifications
+                preferred_qualifications = job.preferred_qualifications
+
+                result = recommend_best_candidate(
+                    applications,
+                    description,
+                    responsibilities,
+                    required_qualifications,
+                    preferred_qualifications,
+                )
+
                 return Response({"result": result}, status=status.HTTP_200_OK)
+
             except Exception as e:
                 return Response(
                     {"error": f"Failed to process recommendation: {str(e)}"},

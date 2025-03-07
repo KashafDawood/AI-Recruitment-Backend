@@ -81,7 +81,15 @@ def parse_applications(applications):
     return parsed_applications
 
 
-def recommend_best_candidate(applications, job_description, limit=5, minimum_score=70):
+def recommend_best_candidate(
+    applications,
+    job_description,
+    preferred_qualifications="",
+    required_qualifications="",
+    responsibilities="",
+    limit=5,
+    minimum_score=70,
+):
     # Parse applications into a format suitable for AI analysis
     parsed_applications = parse_applications(applications)
 
@@ -90,6 +98,9 @@ def recommend_best_candidate(applications, job_description, limit=5, minimum_sco
     
     Job Description:
     {job_description}
+    {responsibilities}
+    {required_qualifications}
+    {preferred_qualifications}
     
     Candidates Applications:
     {json.dumps(parsed_applications, indent=2)}
