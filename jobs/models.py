@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+import json
 
 
 class JobListing(models.Model):
@@ -21,6 +22,7 @@ class JobListing(models.Model):
     location = models.CharField(max_length=255)
     experience_required = models.CharField(max_length=100)
     salary = models.CharField(max_length=100, blank=True, null=True)
+    company = models.CharField(max_length=255, blank=True, null=True)
     job_location_type = models.CharField(
         max_length=10, choices=JOB_LOCATION_TYPE_CHOICES, default="onsite"
     )
@@ -30,5 +32,9 @@ class JobListing(models.Model):
     job_status = models.CharField(
         max_length=10, choices=JOB_STATUS_CHOICES, default="open"
     )
-    description = models.TextField()
+    description = models.JSONField(default=list, blank=True)
+    responsibilities = models.JSONField(default=list, blank=True)
+    required_qualifications = models.JSONField(default=list, blank=True)
+    preferred_qualifications = models.JSONField(default=list, blank=True)
+    benefits = models.JSONField(default=list, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

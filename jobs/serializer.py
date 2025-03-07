@@ -3,15 +3,31 @@ from .models import JobListing
 
 
 class PublishJobListing(serializers.Serializer):
-
-    job_title = serializers.CharField(max_length=255)
+    title = serializers.CharField(max_length=255)
+    company = serializers.CharField(max_length=255, required=False)
     location = serializers.CharField(max_length=255)
-    description = serializers.CharField()
-    experience_required = serializers.CharField(max_length=255)
-    salary_range = serializers.CharField(
-        max_length=100, required=False, allow_blank=True
+    experience = serializers.CharField(max_length=255)
+    salary = serializers.CharField(max_length=100, required=False)
+    description = serializers.ListField(child=serializers.CharField(), required=False)
+    responsibilities = serializers.ListField(
+        child=serializers.CharField(), required=False
     )
-    job_type = serializers.CharField(max_length=10)
+    required_qualifications = serializers.ListField(
+        child=serializers.CharField(), required=False
+    )
+    preferred_qualifications = serializers.ListField(
+        child=serializers.CharField(), required=False
+    )
+    benefits = serializers.ListField(child=serializers.CharField(), required=False)
+    job_type = serializers.ChoiceField(
+        choices=JobListing.JOB_TYPE_CHOICES, default="full time", required=False
+    )
+    job_location_type = serializers.ChoiceField(
+        choices=JobListing.JOB_LOCATION_TYPE_CHOICES, default="onsite", required=False
+    )
+    job_status = serializers.ChoiceField(
+        choices=JobListing.JOB_STATUS_CHOICES, default="open", required=False
+    )
 
 
 class JobListingSerializer(serializers.ModelSerializer):
@@ -23,7 +39,12 @@ class JobListingSerializer(serializers.ModelSerializer):
             "id",
             "title",
             "location",
+            "company",
             "description",
+            "responsibilities",
+            "required_qualifications",
+            "preferred_qualifications",
+            "benefits",
             "experience_required",
             "salary",
             "job_type",
