@@ -275,8 +275,8 @@ class UpdateBioView(APIView):
         bio = serializer.validated_data["bio"]
         candidate_profile = request.user.candidate_profile
 
-        bio = filter_bio(bio)
+        filtered_bio = filter_bio(bio)
 
-        candidate_profile.bio = bio
+        candidate_profile.bio = filtered_bio
         candidate_profile.save()
         return Response({"bio": candidate_profile.bio}, status=status.HTTP_200_OK)

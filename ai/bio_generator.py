@@ -187,12 +187,4 @@ def generate_candidate_bio(candidate):
         temperature=0.7,
     )
 
-    bio = completion.choices[0].message.content.strip()
-
-    # Remove ```html and ``` from the generated bio
-    if bio.startswith("```html"):
-        bio = bio[7:]
-    if bio.endswith("```"):
-        bio = bio[:-3]
-
-    return bio
+    return completion.choices[0].message.content
