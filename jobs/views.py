@@ -5,6 +5,7 @@ from .serializer import PublishJobListing, JobListingSerializer
 from rest_framework.permissions import IsAuthenticated
 from core.permissions import IsEmployer, IsEmployerAndOwner
 from .models import JobListing
+from ai.job_filter import job_filtering
 
 
 class PublishJobListingView(APIView):
@@ -38,12 +39,44 @@ class PublishJobListingView(APIView):
                 benefits=serializer.validated_data.get("benefits", []),
             )
 
-            # Return the created job listing
+            # Get the job listing as a dictionary to send to the AI
+            job_dict = {
+                "title": job_listing.title,
+                "location": job_listing.location,
+                "company": job_listing.company,
+                "experience": job_listing.experience_required,
+                "salary": job_listing.salary,
+                "job_type": job_listing.job_type,
+                "job_location_type": job_listing.job_location_type,
+                "job_status": job_listing.job_status,
+                "description": job_listing.description,
+                "responsibilities": job_listing.responsibilities,
+                "required_qualifications": job_listing.required_qualifications,
+                "preferred_qualifications": job_listing.preferred_qualifications,
+                "benefits": job_listing.benefits,
+            }
+
+            # Filter job post
+            filter_result = job_filtering(job_dict)
+
+            # Update job listing with modified data if needed
+            if not filter_result.get("approved", True):
+                modified_job = filter_result.get("modified_job", {})
+                # Update the job listing with modified fields
+                for field, value in modified_job.items():
+                    if hasattr(job_listing, field):
+                        setattr(job_listing, field, value)
+                job_listing.save()
+
+            # Serialize the actual job listing object, not the filter result
             job_serializer = JobListingSerializer(job_listing)
+
             return Response(
                 {
                     "message": "Job listing successfully published!",
                     "job_listing": job_serializer.data,
+                    "policy_violations": filter_result.get("policy_violations", []),
+                    "approved": filter_result.get("approved", True),
                 },
                 status=status.HTTP_201_CREATED,
             )

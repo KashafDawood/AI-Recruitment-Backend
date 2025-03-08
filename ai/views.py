@@ -14,11 +14,12 @@ from rest_framework.permissions import IsAuthenticated
 from core.permissions import IsEmployer, IsCandidate
 import markdown
 from bs4 import BeautifulSoup
-from .candidate_recommender import recommend_best_candidate, HttpResponse
+from .candidate_recommender import recommend_best_candidate
 from jobs.models import JobListing
 from django.http import HttpResponse
 
 from .contract_generator import generate_contract
+
 
 class GenerateJobPostingView(APIView):
     permission_classes = [IsAuthenticated, IsEmployer]
@@ -132,6 +133,7 @@ class BestCandidateRecommenderView(APIView):
                 )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class GenerateContractView(APIView):
     permission_classes = [IsAuthenticated, IsEmployer]
 
@@ -140,8 +142,13 @@ class GenerateContractView(APIView):
         if serializer.is_valid():
             contract_data = serializer.validated_data
             contract_path = generate_contract(contract_data)
-            with open(contract_path, 'rb') as contract_file:
-                response = HttpResponse(contract_file.read(), content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
-                response['Content-Disposition'] = f'attachment; filename="{contract_data["employee_name"]}_contract.docx"'
+            with open(contract_path, "rb") as contract_file:
+                response = HttpResponse(
+                    contract_file.read(),
+                    content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                )
+                response["Content-Disposition"] = (
+                    f'attachment; filename="{contract_data["employee_name"]}_contract.docx"'
+                )
                 return response
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
