@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializer import GenerateJobListing, GenerateBlogSerializer
+from .serializer import GenerateJobListing, GenerateBlogSerializer, GenerateContractSerializer
 from .JobList_generator import generate_job_listing
 from .bio_generator import generate_candidate_bio
 from .blog_post_generator import generate_blog_post
@@ -9,8 +9,9 @@ from rest_framework.permissions import IsAuthenticated
 from core.permissions import IsEmployer, IsCandidate
 import markdown
 from bs4 import BeautifulSoup
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from .bio_filter import filter_bio
+from .contract_generator import generate_contract
 
 class GenerateJobPostingView(APIView):
     permission_classes = [IsAuthenticated, IsEmployer]
@@ -99,4 +100,18 @@ class GenerateBlogView(APIView):
             formatted_blog = soup.prettify(formatter="html").replace("\n", " ")
 
             return Response({"blog": formatted_blog}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class GenerateContractView(APIView):
+    permission_classes = [IsAuthenticated, IsEmployer]
+
+    def post(self, request, *args, **kwargs):
+        serializer = GenerateContractSerializer(data=request.data)
+        if serializer.is_valid():
+            contract_data = serializer.validated_data
+            contract_path = generate_contract(contract_data)
+            with open(contract_path, 'rb') as contract_file:
+                response = HttpResponse(contract_file.read(), content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+                response['Content-Disposition'] = f'attachment; filename="{contract_data["employee_name"]}_contract.docx"'
+                return response
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

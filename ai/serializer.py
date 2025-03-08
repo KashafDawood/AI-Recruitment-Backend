@@ -1,5 +1,18 @@
 from rest_framework import serializers
 
+class GenerateContractSerializer(serializers.Serializer):
+    employer_name = serializers.CharField(max_length=255)
+    employee_name = serializers.CharField(max_length=255)
+    job_title = serializers.CharField(max_length=255)
+    start_date = serializers.DateField()
+    end_date = serializers.DateField(required=False, allow_null=True)
+    salary = serializers.CharField(max_length=100)
+    responsibilities = serializers.CharField()
+    benefits = serializers.CharField(required=False, allow_blank=True)
+    terms = serializers.CharField()
+    state = serializers.CharField(max_length=100)  # New field for state
+    employer_address = serializers.CharField(max_length=255)  # New field for employer address
+    employee_address = serializers.CharField(max_length=255)  # New field for employee address
 
 class GenerateJobListing(serializers.Serializer):
     job_title = serializers.CharField(max_length=255)
