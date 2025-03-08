@@ -2,23 +2,42 @@ from django.conf import settings
 from openai import OpenAI
 import re
 
+
+def contains_inappropriate_content(text):
+    # Basic patterns for detecting potentially inappropriate content
+    patterns = [
+        r"\b(fuck|shit|damn|bitch|ass|crap|dick|pussy|cock|whore|slut)\b",  # Profanity
+        r"\b(stupid|idiot|moron|dumb|retard)\b",  # Derogatory terms
+        r"\b(hate|kill|murder|attack|destroy)\b",  # Violent terms
+        r"\b(nazi|racist|sexist|homophobic|transphobic)\b",  # Discriminatory terms
+    ]
+
+    # Check for patterns
+    for pattern in patterns:
+        if re.search(pattern, text.lower()):
+            return True
+
+    return False
+
+
 def filter_bio(bio):
-    """Filter and clean the candidate bio to ensure it contains no inappropriate wording or policy violations."""
-    # AI prompt for checking and cleaning the bio
-    
+    # First check if the bio contains inappropriate content
+    if not contains_inappropriate_content(bio):
+        return bio  # Return original if clean
+
     prompt = f"""
     Please review the following candidate bio to ensure it aligns with company policies and maintains professionalism.  
 
     **Company Bio Policy:**  
-    All candidate bios must maintain a professional tone, be free from inappropriate language, and align with company policies. Any content that includes offensive, discriminatory, or unprofessional wording will be removed or modified. Bios should accurately represent the candidate’s qualifications and experience while maintaining respect and integrity.  
+    All candidate bios must maintain a professional tone, be free from inappropriate language, and align with company policies. Any content that includes offensive, discriminatory, or unprofessional wording will be removed or modified. Bios should accurately represent the candidate's qualifications and experience while maintaining respect and integrity.  
 
     **Instructions:**  
     - Identify and remove any inappropriate wording, abusive language, or policy violations.  
     - Ensure the bio remains professional, appropriate, and well-structured.  
     - Retain the original intent while improving clarity and professionalism if necessary.  
-    - Expand the bio to make it more detailed, engaging, and attractive while keeping it concise and relevant.  
-    - Provide only the refined bio text in HTML format without any additional notes or prefixes.  
-    - Write a concise and engaging candidate bio in FIRST PERSON perspective (using "I am" instead of third person), suitable for LinkedIn, job applications, or professional profiles. Keep it under 200-400 words, highlighting expertise, achievements, and career aspirations. Format the bio using HTML tags, including <strong> for important keywords and <em> for emphasis.  
+    - Keep the same perspective, length and tone of the original bio where appropriate.
+    - Provide only the refined bio text without any additional notes or prefixes.
+    - Only make changes if there are inappropriate or unprofessional elements, otherwise preserve the original text.
 
     **Candidate Bio:**  
     {bio}  
@@ -42,12 +61,4 @@ def filter_bio(bio):
         temperature=0.7,
     )
 
-    cleaned_bio = completion.choices[0].message.content.strip()
-
-    # Remove ```html and ``` from the generated bio
-    if cleaned_bio.startswith("```html"):
-        cleaned_bio = cleaned_bio[7:]
-    if cleaned_bio.endswith("```"):
-        cleaned_bio = cleaned_bio[:-3]
-
-    return cleaned_bio
+    return completion.choices[0].message.content

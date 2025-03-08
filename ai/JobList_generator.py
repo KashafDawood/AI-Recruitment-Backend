@@ -1,53 +1,57 @@
 from openai import OpenAI
 from django.conf import settings
+import json
 
 
 def generate_job_listing(
-    job_title,
-    company,
-    location,
-    requirements,
-    experience_required,
+    description,
+    job_title=None,
+    company=None,
+    location=None,
+    experience_required=None,
     salary_range=None,
-    benefits=None,
 ):
     prompt = f"""
-    IMPORTANT:
-    - Generate a well-formatted job listing using Markdown. Ensure proper sectioning and formatting without inserting unnecessary newline characters. Don't need to add the company email as all candidate will apply through the portal. don't use \\n in the output
-
-    Job Details:
-    - **Job Title:** {job_title}
-    - **Company:** {company}
-    - **Location:** {location}
-    - **Requirements:** {requirements}
-    - **Experience:** {experience_required}
-    - **Salary:** {salary_range or 'Not specified'}
-    - **benefits** {benefits}
-
-    **Structure the output as follows (avoid extra newline characters):**
-    - Job Title (H2)
-    - Company, Location, Experience, Salary (Formatted Clearly in a single line separate them with '|' )
-    - A compelling job description (2-3 paragraphs)
-    - Key Responsibilities (Bulleted list)
-    - Required Qualifications and Skills (Bulleted list)
-    - Preferred Qualifications (Bulleted list)
-    - Why Join Us? (Engaging description with bullet points)
-    - Application Instructions (Clear Call to Action)
+    Generate a well-structured job listing based on the following details:
+    - Job Title: {job_title}
+    - Company: {company}
+    - Location: {location}
+    - Short description: {description}
+    - Experience: {experience_required}
+    - Salary: {salary_range}
+    
+    IMPORTANT: Return the response as a structured JSON object with the following fields:
+    - title: Job title
+    - company: company
+    - location: location
+    - experience: experience
+    - salary: salary
+    - description: Array of paragraphs for the job description
+    - responsibilities: Array of key responsibilities
+    - required_qualifications: Array of required skills and qualifications
+    - preferred_qualifications: Array of preferred skills and qualifications
+    - benefits: Array of benefits and reasons to join
     """
+
     client = OpenAI(
         base_url=settings.OPENAI_ENDPOINT,
         api_key=settings.OPENAI_TOKEN,
     )
+
     completion = client.chat.completions.create(
         model=settings.OPENAI_MODEL,
         store=True,
         messages=[
             {
                 "role": "system",
-                "content": "You are a professional HR assistant who formats job listings professionally.",
+                "content": "You are a professional HR assistant who creates structured job listings in JSON format.",
             },
             {"role": "user", "content": prompt},
         ],
         temperature=0.7,
+        response_format={"type": "json_object"},
     )
-    return completion.choices[0].message.content
+
+    response_content = completion.choices[0].message.content
+    job_lising = json.loads(response_content)
+    return job_lising

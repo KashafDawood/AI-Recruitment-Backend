@@ -160,7 +160,7 @@ def generate_candidate_bio(candidate):
 
     # AI prompt for generating candidate bio
     prompt = f"""
-    Write a concise and engaging candidate bio in FIRST PERSON perspective (using "I am" instead of third person), suitable for LinkedIn, job applications, or professional profiles. Keep it under 200-400 words, highlighting expertise, achievements, and career aspirations. Format the bio using HTML tags, including <strong> for important keywords and <em> for emphasis.
+    Write a concise and engaging candidate bio in FIRST PERSON perspective (using "I am" instead of third person), suitable for LinkedIn, job applications, or professional profiles. Keep it under 200-400 words, highlighting expertise, achievements, and career aspirations. remove the quatation marks at the start and end, Highlight the important keywords and emphaise some lines. .
 
     Candidate Details:
     {candidate_details}
@@ -187,12 +187,4 @@ def generate_candidate_bio(candidate):
         temperature=0.7,
     )
 
-    bio = completion.choices[0].message.content.strip()
-
-    # Remove ```html and ``` from the generated bio
-    if bio.startswith("```html"):
-        bio = bio[7:]
-    if bio.endswith("```"):
-        bio = bio[:-3]
-
-    return bio
+    return completion.choices[0].message.content

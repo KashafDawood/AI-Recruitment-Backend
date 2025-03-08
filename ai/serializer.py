@@ -15,15 +15,16 @@ class GenerateContractSerializer(serializers.Serializer):
     employee_address = serializers.CharField(max_length=255)  # New field for employee address
 
 class GenerateJobListing(serializers.Serializer):
-    job_title = serializers.CharField(max_length=255)
-    company = serializers.CharField(max_length=255)
-    location = serializers.CharField(max_length=255)
-    requirements = serializers.CharField(max_length=1000)
-    experience_required = serializers.CharField(max_length=255)
+    job_title = serializers.CharField(max_length=255, required=False, allow_blank=True)
+    company = serializers.CharField(max_length=255, required=False, allow_blank=True)
+    location = serializers.CharField(max_length=255, required=False, allow_blank=True)
+    description = serializers.CharField(max_length=1000)
+    experience_required = serializers.CharField(
+        max_length=255, required=False, allow_blank=True
+    )
     salary_range = serializers.CharField(
         max_length=100, required=False, allow_blank=True
     )
-    benefits = serializers.CharField(max_length=255, required=False, allow_blank=True)
 
 
 class GenerateBlogSerializer(serializers.Serializer):
@@ -42,3 +43,6 @@ class GenerateBlogSerializer(serializers.Serializer):
     )
 
 
+class BestCandidateSerializer(serializers.Serializer):
+    applications = serializers.ListField()
+    job_id = serializers.IntegerField()

@@ -12,8 +12,9 @@ from ..serializers import (
 )
 from datetime import date
 import json
-from ai.bio_generator import generate_candidate_bio
 from ai.bio_filter import filter_bio
+import markdown
+from bs4 import BeautifulSoup
 
 
 class CandidateMeView(generics.RetrieveUpdateDestroyAPIView):
@@ -275,8 +276,17 @@ class UpdateBioView(APIView):
         bio = serializer.validated_data["bio"]
         candidate_profile = request.user.candidate_profile
 
-        bio = filter_bio(bio)
+        filtered_bio = filter_bio(bio)
 
-        candidate_profile.bio = bio
+        # Remove Markdown code block markers (```markdown ... ```)
+        if filtered_bio.startswith("```markdown"):
+            filtered_bio = filtered_bio.strip("```markdown").strip("```")
+
+        # Convert Markdown to HTML
+        formatted_bio = markdown.markdown(filtered_bio)
+        soup = BeautifulSoup(formatted_bio, "html.parser")
+        formatted_bio = soup.prettify(formatter="html").replace("\n", " ")
+
+        candidate_profile.bio = formatted_bio
         candidate_profile.save()
         return Response({"bio": candidate_profile.bio}, status=status.HTTP_200_OK)

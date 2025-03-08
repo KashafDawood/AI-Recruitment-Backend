@@ -1,5 +1,11 @@
 from django.urls import path
-from .views import GenerateJobPostingView, GenerateCandidateBioView, GenerateBlogView, GenerateContractView
+from .views import (
+    GenerateJobPostingView,
+    GenerateCandidateBioView,
+    GenerateBlogView,
+    BestCandidateRecommenderView,
+    GenerateContractView,
+    )
 
 urlpatterns = [
     path(
@@ -15,4 +21,9 @@ urlpatterns = [
     path("generate-blog-post/", GenerateBlogView.as_view(), name="generate-blog-post"),
     path('generate-contract/', GenerateContractView.as_view(), name='generate-contract'),
 
+    path(
+        "recommend-candidate/",
+        BestCandidateRecommenderView.as_view(),
+        name="recommend-candidate",
+    ),
 ]
