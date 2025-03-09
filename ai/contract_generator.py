@@ -6,7 +6,6 @@ from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 import os
 import re
-import base64
 import io
 from PIL import Image, ImageDraw, ImageFont
 from openai import OpenAI
