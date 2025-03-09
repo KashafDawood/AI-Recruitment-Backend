@@ -17,7 +17,7 @@ from bs4 import BeautifulSoup
 from .candidate_recommender import recommend_best_candidate
 from jobs.models import JobListing
 from applications.models import Application
-from users.models import User
+from users.models import User, CandidateProfile, EmployerProfile
 from django.http import HttpResponse
 from .contract_generator import generate_contract
 import os
@@ -154,20 +154,15 @@ class GenerateContractView(APIView):
                 employee = User.objects.get(id=application.candidate.id)
                 employer = request.user
 
-                # Get employer profile for additional company details
-                employer_profile = employer.employer_profile
-
-                # Get candidate profile for additional details
-                candidate_profile = employee.candidate_profile
-
                 # Prepare data for contract generation
                 contract_data = {
-                    "employer_name": employer_profile.company_name,
+                    "employer_name": employer.name,
                     "employer_address": job.location,
                     "employee_name": employee.name,
                     "employee_address": serializer.validated_data.get(
                         "employee_address", "Employee's Address"
                     ),
+                    "company_name": job.company,
                     "job_title": job.title,
                     "start_date": start_date.strftime("%B %d, %Y"),
                     "salary": job.salary,
