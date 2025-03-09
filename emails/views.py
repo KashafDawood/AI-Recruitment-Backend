@@ -1,4 +1,4 @@
-from .email import send_simple_message
+from .email import send_simple_message, send_contract_email
 from .models import EmailOTP
 from django.template.loader import render_to_string
 from django.core.mail import send_mail
@@ -64,3 +64,15 @@ def send_reactivate_account_email(email, url):
         "./reactivate_account_email_template.html", {"email": email, "url": url}
     )
     send_simple_message(subject, message, [email], html_message=html_message)
+
+
+def send_contract_notification(email, contract_url, company_name, job_title):
+    """
+    Send a notification email about the employment contract
+    """
+    try:
+        send_contract_email(email, contract_url, company_name, job_title)
+        return True
+    except Exception as e:
+        print(f"Failed to send contract notification email: {e}")
+        return False

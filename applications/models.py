@@ -21,7 +21,7 @@ class Application(models.Model):
     )
     resume = models.CharField(max_length=100)
     resume_text = models.CharField(blank=True, default="")
-    contract = models.CharField(max_length=100, blank=True, default="")
+    contract = models.CharField(max_length=255, blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

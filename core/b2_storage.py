@@ -17,10 +17,29 @@ class BackblazeB2Storage(Storage):
         self.bucket = self.b2_api.get_bucket_by_name(self.bucket_name)
 
     def _save(self, name, content):
-        content.open()
-        self.bucket.upload_bytes(content.read(), name.replace("\\", "/"))
-        content.close()
-        return name
+        try:
+            # Check if content has a 'read' method directly
+            if hasattr(content, "read"):
+                try:
+                    # Try to open if it has an open method
+                    if hasattr(content, "open"):
+                        content.open()
+                    # Upload the content
+                    self.bucket.upload_bytes(content.read(), name.replace("\\", "/"))
+                    # Close if it has a close method
+                    if hasattr(content, "close"):
+                        content.close()
+                except Exception as e:
+                    print(f"Error during file upload: {e}")
+                    raise
+            else:
+                # If content doesn't have read method, convert to bytes somehow
+                self.bucket.upload_bytes(bytes(content), name.replace("\\", "/"))
+
+            return name
+        except Exception as e:
+            print(f"B2 Storage error: {e}")
+            raise
 
     def _open(self, name, mode="rb"):
         file_info = self.bucket.download_file_by_name(name.replace("\\", "/"))

@@ -21,6 +21,10 @@ from users.models import User, CandidateProfile, EmployerProfile
 from django.http import HttpResponse
 from .contract_generator import generate_contract
 import os
+from core.b2_storage import BackblazeB2Storage
+from emails.email import send_contract_email
+from django.utils import timezone
+from datetime import timedelta
 
 
 class GenerateJobPostingView(APIView):
@@ -183,19 +187,30 @@ class GenerateContractView(APIView):
                 if end_date:
                     contract_data["end_date"] = end_date.strftime("%B %d, %Y")
 
-                # Generate the contract
-                contract_path = generate_contract(contract_data)
+                # Generate the contract and get the B2 URL directly
+                contract_url = generate_contract(contract_data)
 
-                # Return the contract path or serve the file
-                with open(contract_path, "rb") as contract_file:
-                    response = HttpResponse(
-                        contract_file.read(),
-                        content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                    )
-                    response["Content-Disposition"] = (
-                        f'attachment; filename="{os.path.basename(contract_path)}"'
-                    )
-                    return response
+                # Update application with contract URL
+                application.contract = contract_url
+                application.save()
+
+                # Send email to candidate
+                send_contract_email(
+                    employee.email, contract_url, job.company, job.title
+                )
+
+                # Return success response with contract information
+                return Response(
+                    {
+                        "status": "success",
+                        "message": f"Contract generated and sent to {employee.email}",
+                        "contract_url": contract_url,
+                        "candidate_name": employee.name,
+                        "job_title": job.title,
+                        "company": job.company,
+                    },
+                    status=status.HTTP_200_OK,
+                )
 
             except Application.DoesNotExist:
                 return Response(

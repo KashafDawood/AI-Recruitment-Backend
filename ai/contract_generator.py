@@ -11,18 +11,21 @@ from PIL import Image, ImageDraw, ImageFont
 from openai import OpenAI
 from django.conf import settings
 from datetime import datetime
+from core.b2_storage import BackblazeB2Storage
+from django.core.files import File
 
 
 def generate_contract(data):
     """
     Generate a professional employment contract using AI in markdown format,
     then convert it to a formatted Word document with pre-filled employer signature
+    and save it to B2 storage.
 
     Args:
         data (dict): Dictionary containing all contract details
 
     Returns:
-        str: Path to the generated contract file
+        str: URL to the generated contract in B2 storage
     """
     # Create a prompt that explicitly requests markdown formatting
     prompt = f"""
@@ -116,8 +119,22 @@ def generate_contract(data):
         contract_filename = f"{safe_employee_name}_{timestamp}_contract.docx"
         contract_path = os.path.join(contracts_dir, contract_filename)
 
+        # Save locally first
         document.save(contract_path)
-        return contract_path
+
+        # Now save to B2 storage
+        storage = BackblazeB2Storage(location="contracts")
+        b2_path = f"contracts/{contract_filename}"
+
+        # Upload to B2 using Django File
+        with open(contract_path, "rb") as file:
+            django_file = File(file)
+            saved_path = storage._save(b2_path, django_file)
+
+        # Get the B2 URL
+        b2_url = storage.url(saved_path)
+
+        return b2_url
 
     except Exception as e:
         print(f"Contract generation error: {str(e)}")
