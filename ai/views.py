@@ -16,9 +16,11 @@ import markdown
 from bs4 import BeautifulSoup
 from .candidate_recommender import recommend_best_candidate
 from jobs.models import JobListing
+from applications.models import Application
+from users.models import User
 from django.http import HttpResponse
-
 from .contract_generator import generate_contract
+import os
 
 
 class GenerateJobPostingView(APIView):
@@ -140,15 +142,82 @@ class GenerateContractView(APIView):
     def post(self, request, *args, **kwargs):
         serializer = GenerateContractSerializer(data=request.data)
         if serializer.is_valid():
-            contract_data = serializer.validated_data
-            contract_path = generate_contract(contract_data)
-            with open(contract_path, "rb") as contract_file:
-                response = HttpResponse(
-                    contract_file.read(),
-                    content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            app_id = serializer.validated_data["app_id"]
+            start_date = serializer.validated_data["start_date"]
+            end_date = serializer.validated_data.get("end_date")
+            terms = serializer.validated_data.get("terms", "")
+
+            try:
+                # Get all necessary data
+                application = Application.objects.get(id=app_id)
+                job = JobListing.objects.get(id=application.job.id)
+                employee = User.objects.get(id=application.candidate.id)
+                employer = request.user
+
+                # Get employer profile for additional company details
+                employer_profile = employer.employer_profile
+
+                # Get candidate profile for additional details
+                candidate_profile = employee.candidate_profile
+
+                # Prepare data for contract generation
+                contract_data = {
+                    "employer_name": employer_profile.company_name,
+                    "employer_address": job.location,
+                    "employee_name": employee.name,
+                    "employee_address": serializer.validated_data.get(
+                        "employee_address", "Employee's Address"
+                    ),
+                    "job_title": job.title,
+                    "start_date": start_date.strftime("%B %d, %Y"),
+                    "salary": job.salary,
+                    "responsibilities": (
+                        ", ".join(job.responsibilities)
+                        if isinstance(job.responsibilities, list)
+                        else str(job.responsibilities)
+                    ),
+                    "benefits": (
+                        ", ".join(job.benefits)
+                        if isinstance(job.benefits, list)
+                        else str(job.benefits)
+                    ),
+                    "terms": terms,
+                }
+
+                # Add end date if provided
+                if end_date:
+                    contract_data["end_date"] = end_date.strftime("%B %d, %Y")
+
+                # Generate the contract
+                contract_path = generate_contract(contract_data)
+
+                # Return the contract path or serve the file
+                with open(contract_path, "rb") as contract_file:
+                    response = HttpResponse(
+                        contract_file.read(),
+                        content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    )
+                    response["Content-Disposition"] = (
+                        f'attachment; filename="{os.path.basename(contract_path)}"'
+                    )
+                    return response
+
+            except Application.DoesNotExist:
+                return Response(
+                    {"error": "Application not found"}, status=status.HTTP_404_NOT_FOUND
                 )
-                response["Content-Disposition"] = (
-                    f'attachment; filename="{contract_data["employee_name"]}_contract.docx"'
+            except JobListing.DoesNotExist:
+                return Response(
+                    {"error": "Job listing not found"}, status=status.HTTP_404_NOT_FOUND
                 )
-                return response
+            except User.DoesNotExist:
+                return Response(
+                    {"error": "User not found"}, status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                return Response(
+                    {"error": f"Failed to generate contract: {str(e)}"},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
