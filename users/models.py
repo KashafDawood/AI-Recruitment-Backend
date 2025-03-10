@@ -26,6 +26,7 @@ class User(AbstractUser):
     changeUsernameAt = models.DateTimeField(null=True, blank=True)
     certifications = models.JSONField(default=dict, blank=True)
     education = models.JSONField(default=dict, blank=True)
+    address = models.TextField(null=True, blank=True)
     is_verified = models.BooleanField(default=False)
 
     class Meta:
