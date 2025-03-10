@@ -84,6 +84,9 @@ class CandidateSerializer(serializers.ModelSerializer):
     socials = serializers.JSONField(
         source="user.socials", required=False, allow_null=True
     )
+    address = serializers.CharField(
+        source="user.address", required=False, allow_blank=True
+    )
     resumes = serializers.JSONField(required=False)  # Add resumes field
     certifications = serializers.JSONField(
         read_only=True, source="user.certifications", required=False
@@ -107,6 +110,7 @@ class CandidateSerializer(serializers.ModelSerializer):
             "phone",
             "website",
             "socials",
+            "address",
             "skills",
             "bio",
             "resumes",  # Add resumes field
@@ -135,6 +139,8 @@ class CandidateSerializer(serializers.ModelSerializer):
             instance.user.website = user_data["website"]
         if "socials" in user_data:
             instance.user.socials = user_data["socials"]
+        if "address" in user_data:
+            instance.user.address = user_data["address"]
         instance.user.certifications = user_data.get(
             "certifications", instance.user.certifications
         )
@@ -164,6 +170,9 @@ class EmployerSerializer(serializers.ModelSerializer):
     socials = serializers.JSONField(
         source="user.socials", required=False, allow_null=True
     )
+    address = serializers.CharField(
+        source="user.address", required=False, allow_blank=True
+    )
     company_name = serializers.CharField(
         required=False
     )  # Added to allow optional update
@@ -180,6 +189,7 @@ class EmployerSerializer(serializers.ModelSerializer):
             "phone",
             "website",
             "socials",
+            "address",
             "company_name",
             "logo",
             "industry",
@@ -198,6 +208,8 @@ class EmployerSerializer(serializers.ModelSerializer):
             instance.user.website = user_data["website"]
         if "socials" in user_data:
             instance.user.socials = user_data["socials"]
+        if "address" in user_data:
+            instance.user.address = user_data["address"]
         instance.user.save()
 
         # Update employer-specific fields
@@ -236,6 +248,7 @@ class UserSerializer(serializers.ModelSerializer):
             "phone",
             "website",
             "socials",
+            "address",
             "certifications",
             "education",
         ]
@@ -280,4 +293,3 @@ class CertificationSerializer(serializers.Serializer):
 
 class BioSerializer(serializers.Serializer):
     bio = serializers.CharField(required=True)
-
