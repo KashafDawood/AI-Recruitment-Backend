@@ -66,18 +66,33 @@ class GenerateCandidateBioView(APIView):
                 {"error": "User not found"}, status=status.HTTP_404_NOT_FOUND
             )
 
-        bio = generate_candidate_bio(user)
+        try:
+            bio = generate_candidate_bio(user)
 
-        # Remove Markdown code block markers (```markdown ... ```)
-        if bio.startswith("```markdown"):
-            bio = bio.strip("```markdown").strip("```")
+            # Remove Markdown code block markers (```markdown ... ```)
+            if bio.startswith("```markdown"):
+                bio = bio.strip("```markdown").strip("```")
 
-        # Convert Markdown to HTML
-        formatted_bio = markdown.markdown(bio)
-        soup = BeautifulSoup(formatted_bio, "html.parser")
-        formatted_bio = soup.prettify(formatter="html").replace("\n", " ")
+            # Convert Markdown to HTML
+            formatted_bio = markdown.markdown(bio)
+            soup = BeautifulSoup(formatted_bio, "html.parser")
+            formatted_bio = soup.prettify(formatter="html").replace("\n", " ")
 
-        return Response({"bio": formatted_bio}, status=status.HTTP_200_OK)
+            return Response({"bio": formatted_bio}, status=status.HTTP_200_OK)
+        except ValueError as e:
+            # More descriptive error message for missing skills or resume
+            error_message = str(e)
+            if "Skills are required" in error_message:
+                error_message = "Either skills or resume are required to generate your bio. Please add skills or upload your resume."
+
+            return Response(
+                {"error": error_message}, status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return Response(
+                {"error": f"Failed to generate bio: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 class GenerateBlogView(APIView):
