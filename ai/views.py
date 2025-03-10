@@ -163,8 +163,10 @@ class GenerateContractView(APIView):
                     "employer_name": employer.name,
                     "employer_address": job.location,
                     "employee_name": employee.name,
-                    "employee_address": serializer.validated_data.get(
-                        "employee_address", "Employee's Address"
+                    "employee_address": (
+                        employee.address
+                        if hasattr(employee, "address") and employee.address
+                        else "Address to be provided"
                     ),
                     "company_name": job.company,
                     "job_title": job.title,

@@ -5,9 +5,6 @@ class GenerateContractSerializer(serializers.Serializer):
     app_id = serializers.IntegerField()
     start_date = serializers.DateField()
     end_date = serializers.DateField(required=False, allow_null=True)
-    employee_address = serializers.CharField(
-        max_length=255, required=False, default="Employee's Address"
-    )
     terms = serializers.CharField(
         required=False, default="Standard terms and conditions apply."
     )
