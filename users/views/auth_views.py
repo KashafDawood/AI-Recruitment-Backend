@@ -148,6 +148,7 @@ class LoginView(generics.GenericAPIView):
         user = serializer.validated_data["user"]
 
         if not user.is_verified:
+            generate_otp(user)
             return Response(
                 {"error": "Please verify your email before logging in."},
                 status=status.HTTP_401_UNAUTHORIZED,
