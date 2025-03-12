@@ -151,7 +151,7 @@ class LoginView(generics.GenericAPIView):
             generate_otp(user)
             return Response(
                 {"error": "Please verify your email before logging in."},
-                status=status.HTTP_401_UNAUTHORIZED,
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         if not user.is_active:
