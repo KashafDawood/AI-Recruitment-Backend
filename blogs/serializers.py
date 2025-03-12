@@ -2,20 +2,24 @@ from rest_framework import serializers
 from django.utils.text import slugify
 from .models import Blog
 
-
 class BlogCreateSerializer(serializers.ModelSerializer):
+    thumbnail = serializers.ImageField(required=False, allow_null=True)  # Update this line
+
     class Meta:
         model = Blog
         fields = [
+            "id",
             "title",
             "content",
             "keywords",
+            "thumbnail",
             "created_at",
             "updated_at",
             "status",
             "slug",
+            "category",
         ]
-        read_only_fields = ["created_at", "updated_at", "slug"]
+        read_only_fields = ["id", "created_at", "updated_at", "slug"]
 
     def create(self, validated_data):
         # Generate slug from title
@@ -35,23 +39,27 @@ class BlogCreateSerializer(serializers.ModelSerializer):
         )
         return blog
 
-
 class BlogSerializer(serializers.ModelSerializer):
     title = serializers.CharField(required=False)
     content = serializers.CharField(required=False)
     keywords = serializers.CharField(required=False)
     status = serializers.CharField(required=False)
+    category = serializers.CharField(required=False)
+    thumbnail = serializers.ImageField(required=False, allow_null=True)  # Update this line
 
     class Meta:
         model = Blog
         fields = [
+            "id",
             "title",
             "content",
             "keywords",
+            "thumbnail",
             "status",
             "slug",
+            "category",
         ]
-        read_only_fields = ["created_at", "updated_at", "slug", "employer"]
+        read_only_fields = ["id", "created_at", "updated_at", "slug", "employer"]
 
     def update(self, instance, validated_data):
         # Update slug if title is changed

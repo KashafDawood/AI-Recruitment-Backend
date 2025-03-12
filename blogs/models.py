@@ -28,6 +28,7 @@ class Blog(models.Model):
         on_delete=models.CASCADE,
         related_name="blogs",
     )
+    category = models.CharField(max_length=100, blank=True) 
 
     class Meta:
         ordering = ["-created_at"]
