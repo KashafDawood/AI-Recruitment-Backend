@@ -5,19 +5,19 @@ from core.permissions import IsEmployerAndOwner, IsEmployer
 from .models import Blog
 from .serializers import BlogSerializer, BlogCreateSerializer, BlogSerializer
 
-
 class BlogListView(generics.ListAPIView):
     serializer_class = BlogSerializer
 
     def get_queryset(self):
-        return Blog.objects.filter(status="published").order_by("-created_at")
-
+        page = self.request.query_params.get('page', 1)
+        limit = self.request.query_params.get('limit', 10)
+        offset = (int(page) - 1) * int(limit)
+        return Blog.objects.filter(status="published").order_by("-created_at")[offset:offset + int(limit)]
 
 class CreateBlogView(generics.CreateAPIView):
     queryset = Blog.objects.all()
     serializer_class = BlogCreateSerializer
     permission_classes = [IsEmployer]
-
 
 class BlogDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Blog.objects.all()
@@ -28,7 +28,6 @@ class BlogDetailView(generics.RetrieveUpdateDestroyAPIView):
         if self.request.method in ['PUT', 'PATCH', 'DELETE']:
             self.permission_classes = [IsAuthenticated, IsEmployer]
         return super().get_permissions()
-
 
 class LatestBlogsView(generics.ListAPIView):
     serializer_class = BlogSerializer
