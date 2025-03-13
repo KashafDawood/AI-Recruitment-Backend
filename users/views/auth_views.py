@@ -150,7 +150,16 @@ class LoginView(generics.GenericAPIView):
         if not user.is_verified:
             generate_otp(user)
             return Response(
-                {"error": "Please verify your email before logging in."},
+                {
+                    "error": "Please verify your email before logging in.",
+                    "user": {
+                        "id": user.id,
+                        "email": user.email,
+                        "role": user.role,
+                        "name": user.name,
+                        "username": user.username,
+                    },
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
