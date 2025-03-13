@@ -59,16 +59,20 @@ class LoginSerializer(serializers.Serializer):
         # Try to get the user first
         try:
             user = User.objects.get(email=email)
+            authenticated_user = authenticate(username=user.username, password=password)
+
+            # Check if authentication was successful
+            if not authenticated_user:
+                raise serializers.ValidationError(
+                    "Invalid email or password. Please check your credentials."
+                )
+
+            return {"user": authenticated_user}
+
         except User.DoesNotExist:
-            raise serializers.ValidationError("No user found with this email")
-
-        # Authenticate using the username we got from the user object
-        user = authenticate(username=user.username, password=password)
-
-        if not user:
-            raise serializers.ValidationError("Invalid credentials")
-
-        return {"user": user}
+            raise serializers.ValidationError(
+                "Invalid email or password. Please check your credentials."
+            )
 
 
 class CandidateSerializer(serializers.ModelSerializer):
