@@ -100,6 +100,14 @@ def generate_candidate_bio(candidate):
         user.certifications if isinstance(user.certifications, list) else []
     )
 
+    # Initialize parsed with default values
+    parsed = {
+        "education": "Not provided",
+        "experience": "Not provided",
+        "certifications": [],
+        "skills": [],
+    }
+
     # Get the latest resume
     resume = None
     if candidate_profile.resumes:
@@ -108,17 +116,29 @@ def generate_candidate_bio(candidate):
         )
         resume = latest_resume.get("resume")
 
-    if not resume and not skills:
+    # Check if we have either skills or a resume
+    if not skills and not resume:
         raise ValueError(
             "Skills are required to generate the candidate bio. Please add skills."
         )
 
+    # Only parse resume if it exists
     if resume:
         parsed = parse_resume(resume)
-        education = parsed.get("education", education)
-        experience = parsed.get("experience", experience)
-        parsed_certifications = parsed.get("certifications", [])
-        certifications.extend(parsed_certifications)
+        # Resume exists, so prioritize data from it
+        resume_education = parsed.get("education", "Not provided")
+        resume_experience = parsed.get("experience", "Not provided")
+        resume_certifications = parsed.get("certifications", [])
+
+        # Prefer resume data if available, fallback to user profile data
+        education = (
+            resume_education if resume_education != "Not provided" else education
+        )
+        experience = (
+            resume_experience if resume_experience != "Not provided" else experience
+        )
+        # Combine certifications from both sources
+        certifications.extend(resume_certifications)
 
     # Ensure certifications are properly formatted
     certifications = [
@@ -133,21 +153,11 @@ def generate_candidate_bio(candidate):
         set(filter(None, certifications))
     )  # Remove empty values and duplicates
 
-    # Determine the most suitable data to use
-    final_education = (
-        education
-        if education != "Not provided"
-        else parsed.get("education", "Not provided")
-    )
-    final_experience = (
-        experience
-        if experience != "Not provided"
-        else parsed.get("experience", "Not provided")
-    )
+    # Final data will now prioritize resume data when available
+    final_education = education
+    final_experience = experience
     final_skills = skills if skills else parsed.get("skills", [])
-    final_certifications = (
-        certifications if certifications else parsed.get("certifications", [])
-    )
+    final_certifications = certifications
 
     # Construct candidate details
     candidate_details = f"""
