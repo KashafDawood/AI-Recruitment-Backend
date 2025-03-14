@@ -149,9 +149,20 @@ class EducationDetailView(generics.RetrieveUpdateDestroyAPIView):
         serializer.is_valid(raise_exception=True)
         user = request.user
 
+        # Convert date objects to strings before updating
+        validated_data = serializer.validated_data.copy()
+        if "start_date" in validated_data and isinstance(
+            validated_data["start_date"], date
+        ):
+            validated_data["start_date"] = validated_data["start_date"].isoformat()
+        if "end_date" in validated_data and isinstance(
+            validated_data["end_date"], date
+        ):
+            validated_data["end_date"] = validated_data["end_date"].isoformat()
+
         # Update the education entry in the list
         if hasattr(self, "_education_index"):
-            user.education[self._education_index].update(serializer.validated_data)
+            user.education[self._education_index].update(validated_data)
             user.save()
             return Response(
                 {"message": "Education updated successfully"}, status=status.HTTP_200_OK
