@@ -280,13 +280,6 @@ class EducationSerializer(serializers.Serializer):
     start_date = serializers.DateField()
     end_date = serializers.DateField(required=False, allow_null=True)
 
-    def validate(self, data):
-        if data["is_studying"] and data.get("end_date"):
-            raise serializers.ValidationError(
-                "End date should be null if currently studying."
-            )
-        return data
-
 
 class CertificationSerializer(serializers.Serializer):
     certification_name = serializers.CharField(max_length=255)
