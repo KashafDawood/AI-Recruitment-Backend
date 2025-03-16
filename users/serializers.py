@@ -117,9 +117,9 @@ class CandidateSerializer(serializers.ModelSerializer):
             "address",
             "skills",
             "bio",
-            "resumes",  # Add resumes field
-            "certifications",  # Add certifications field
-            "education",  # Add education field
+            "resumes",
+            "certifications",
+            "education",
             "experience",
             "interests",
         ]
@@ -151,7 +151,6 @@ class CandidateSerializer(serializers.ModelSerializer):
         instance.user.education = user_data.get("education", instance.user.education)
         instance.user.save()
 
-        # Update candidate-specific fields
         instance.skills = validated_data.get("skills", instance.skills)
         instance.bio = validated_data.get("bio", instance.bio)
         instance.resumes = validated_data.get("resumes", instance.resumes)
@@ -177,10 +176,8 @@ class EmployerSerializer(serializers.ModelSerializer):
     address = serializers.CharField(
         source="user.address", required=False, allow_blank=True
     )
-    company_name = serializers.CharField(
-        required=False
-    )  # Added to allow optional update
-    industry = serializers.CharField(required=False)  # Added to allow optional update
+    company_name = serializers.CharField(required=False)
+    industry = serializers.CharField(required=False)
 
     class Meta:
         model = EmployerProfile
@@ -195,6 +192,8 @@ class EmployerSerializer(serializers.ModelSerializer):
             "socials",
             "address",
             "company_name",
+            "about_company",
+            "company_size",
             "logo",
             "industry",
         ]
@@ -216,9 +215,14 @@ class EmployerSerializer(serializers.ModelSerializer):
             instance.user.address = user_data["address"]
         instance.user.save()
 
-        # Update employer-specific fields
         instance.company_name = validated_data.get(
             "company_name", instance.company_name
+        )
+        instance.about_company = validated_data.get(
+            "about_company", instance.about_company
+        )
+        instance.company_size = validated_data.get(
+            "company_size", instance.company_size
         )
         instance.logo = validated_data.get("logo", instance.logo)
         instance.industry = validated_data.get("industry", instance.industry)

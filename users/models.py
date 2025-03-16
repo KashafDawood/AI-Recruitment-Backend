@@ -84,6 +84,8 @@ class EmployerProfile(models.Model):
         blank=True,
     )
     industry = models.CharField(max_length=100)
+    about_company = models.TextField(null=True, blank=True)
+    company_size = models.CharField(max_length=25, null=True, blank=True)
 
     class Meta:
         db_table = "users_employer_profile"
