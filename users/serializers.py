@@ -178,6 +178,7 @@ class EmployerSerializer(serializers.ModelSerializer):
     )
     company_name = serializers.CharField(required=False)
     industry = serializers.CharField(required=False)
+    logo = serializers.ImageField(required=False)
 
     class Meta:
         model = EmployerProfile
@@ -224,8 +225,10 @@ class EmployerSerializer(serializers.ModelSerializer):
         instance.company_size = validated_data.get(
             "company_size", instance.company_size
         )
-        instance.logo = validated_data.get("logo", instance.logo)
+        if "logo" in validated_data:
+            instance.logo = validated_data.get("logo")
         instance.industry = validated_data.get("industry", instance.industry)
+
         instance.save()
         return instance
 
