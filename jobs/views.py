@@ -102,6 +102,14 @@ class JobListingListView(generics.ListAPIView):
     serializer_class = JobListingSerializer
     permission_classes = [IsAuthenticated]
 
+class FetchTenJobsView(generics.ListAPIView):
+    serializer_class = JobListingSerializer
+
+    def get_queryset(self):
+        page = self.request.query_params.get('page', 1)
+        limit = self.request.query_params.get('limit', 10)
+        offset = (int(page) - 1) * int(limit)
+        return JobListing.objects.all().order_by("-created_at")[offset:offset + int(limit)]
 
 class jobListingView(generics.RetrieveAPIView):
     queryset = JobListing.objects.all()
