@@ -78,11 +78,20 @@ class AddEducationView(APIView):
         ):
             education_entry["end_date"] = education_entry["end_date"].isoformat()
 
-        # Handle education as a list instead of a dictionary
+        # Handle education properly - ensure it's a list
         if user.education is None:
             user.education = []
+        elif isinstance(user.education, dict):
+            user.education = list(user.education.values()) if user.education else []
+        elif isinstance(user.education, str):
+            try:
+                user.education = json.loads(user.education)
+                if isinstance(user.education, dict):
+                    user.education = list(user.education.values())
+            except json.JSONDecodeError:
+                user.education = []
 
-        # Since user.education is a list, just append the new entry
+        # Now we're sure it's a list, append the new entry
         user.education.append(education_entry)
         user.save()
 
@@ -130,9 +139,26 @@ class EducationDetailView(generics.RetrieveUpdateDestroyAPIView):
         user = self.request.user
         degree_name = self.kwargs.get("degree_name")
 
+        # Ensure education is properly loaded as a list
+        if user.education is None:
+            user.education = []
+            return None
+        elif isinstance(user.education, dict):
+            user.education = list(user.education.values()) if user.education else []
+        elif isinstance(user.education, str):
+            try:
+                user.education = json.loads(user.education)
+                if isinstance(user.education, dict):
+                    user.education = list(user.education.values())
+            except json.JSONDecodeError:
+                user.education = []
+
         # Handle education as a list
         for idx, education in enumerate(user.education):
-            if education.get("degree_name") == degree_name:
+            if (
+                isinstance(education, dict)
+                and education.get("degree_name") == degree_name
+            ):
                 # Store index for later use
                 self._education_index = idx
                 return education
@@ -176,9 +202,27 @@ class EducationDetailView(generics.RetrieveUpdateDestroyAPIView):
         user = request.user
         degree_name = self.kwargs.get("degree_name")
 
+        # Ensure education is properly loaded as a list
+        if user.education is None:
+            return Response(
+                {"error": "Education not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+        elif isinstance(user.education, dict):
+            user.education = list(user.education.values()) if user.education else []
+        elif isinstance(user.education, str):
+            try:
+                user.education = json.loads(user.education)
+                if isinstance(user.education, dict):
+                    user.education = list(user.education.values())
+            except json.JSONDecodeError:
+                user.education = []
+
         # Remove education from list
         for idx, education in enumerate(user.education):
-            if education.get("degree_name") == degree_name:
+            if (
+                isinstance(education, dict)
+                and education.get("degree_name") == degree_name
+            ):
                 user.education.pop(idx)
                 user.save()
                 return Response(
