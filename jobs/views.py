@@ -5,6 +5,7 @@ from .serializer import PublishJobListing, JobListingSerializer
 from rest_framework.permissions import IsAuthenticated
 from core.permissions import IsEmployer, IsEmployerAndOwner
 from .models import JobListing
+from users.models import User
 from ai.job_filter import job_filtering
 from django.db import transaction
 
@@ -102,14 +103,18 @@ class JobListingListView(generics.ListAPIView):
     serializer_class = JobListingSerializer
     permission_classes = [IsAuthenticated]
 
+
 class FetchTenJobsView(generics.ListAPIView):
     serializer_class = JobListingSerializer
 
     def get_queryset(self):
-        page = self.request.query_params.get('page', 1)
-        limit = self.request.query_params.get('limit', 10)
+        page = self.request.query_params.get("page", 1)
+        limit = self.request.query_params.get("limit", 10)
         offset = (int(page) - 1) * int(limit)
-        return JobListing.objects.all().order_by("-created_at")[offset:offset + int(limit)]
+        return JobListing.objects.all().order_by("-created_at")[
+            offset : offset + int(limit)
+        ]
+
 
 class jobListingView(generics.RetrieveAPIView):
     queryset = JobListing.objects.all()
@@ -118,13 +123,14 @@ class jobListingView(generics.RetrieveAPIView):
     lookup_field = "id"
 
 
-class MyJobListingsView(generics.ListAPIView):
-
+class EmployerJobListingsView(generics.ListAPIView):
     serializer_class = JobListingSerializer
-    permission_classes = [IsAuthenticated, IsEmployerAndOwner]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        """Return only job listings created by the current user"""
-        return JobListing.objects.filter(employer=self.request.user).order_by(
-            "-created_at"
-        )
+        username = self.kwargs.get("username")
+        try:
+            user = User.objects.get(username=username)
+            return JobListing.objects.filter(employer=user).order_by("-created_at")
+        except User.DoesNotExist:
+            return JobListing.objects.none()
