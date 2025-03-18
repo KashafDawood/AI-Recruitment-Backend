@@ -9,8 +9,8 @@ from users.models import User
 from ai.job_filter import job_filtering
 from django.db import transaction
 from core.pagination import CustomLimitOffsetPagination
-from django.db.models import Q
-
+from django.db.models import Q, F
+from django.contrib.postgres.search import TrigramSimilarity
 
 class PublishJobListingView(APIView):
     permission_classes = [IsAuthenticated, IsEmployer]
@@ -113,41 +113,56 @@ class FetchTenJobsView(generics.ListAPIView):
 
     def get_queryset(self):
         queryset = JobListing.objects.all().order_by("-created_at")
-        query_params = self.request.query_params  # Get all query parameters
+        query_params = self.request.query_params  
 
         valid_filters = {
             "title": "title__icontains",
+            "company": "company__icontains",
             "location": "location__icontains",
             "job_location_type": "job_location_type__icontains",
             "job_type": "job_type__icontains",
         }
 
-        filters = Q()  # Start with an empty Q object
-        has_filters = False  # Track if any filters are applied
+        filters = Q()
+        has_filters = False
 
-        # Apply standard filters
+        # Apply direct field filters
         for param, db_field in valid_filters.items():
             value = query_params.get(param, None)
             if value:
-                filters &= Q(**{db_field: value})
+                filters &= Q(**{db_field: value.strip()})
                 has_filters = True
 
-        # Apply generic search filter
+        # Apply enhanced search across multiple fields
         search_query = query_params.get("search", None)
         if search_query:
-            search_filter = (
-                Q(title__icontains=search_query) | 
-                Q(location__icontains=search_query) | 
-                Q(job_location_type__icontains=search_query) | 
-                Q(job_type__icontains=search_query)
-            )
+            search_query = search_query.lower().strip()
+            search_words = search_query.split()  
+
+            search_filter = Q()
+            for word in search_words:
+                search_filter |= (
+                    Q(title__icontains=word) |
+                    Q(company__icontains=word) |
+                    Q(location__icontains=word) |
+                    Q(job_location_type__icontains=word) |
+                    Q(job_type__icontains=word)
+                )
+
             filters &= search_filter
             has_filters = True
+
+            # Apply Trigram Similarity Search only when `search_query` exists
+            queryset = queryset.annotate(
+                similarity=TrigramSimilarity("title", search_query)
+            ).filter(similarity__gt=0.2).order_by(F("similarity").desc())
 
         if has_filters:
             queryset = queryset.filter(filters)
 
         return queryset
+
+
 
 class jobListingView(generics.RetrieveAPIView):
     queryset = JobListing.objects.all()
