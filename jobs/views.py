@@ -7,6 +7,8 @@ from core.permissions import IsEmployer, IsEmployerAndOwner
 from .models import JobListing
 from ai.job_filter import job_filtering
 from django.db import transaction
+from core.pagination import CustomLimitOffsetPagination
+from django.db.models import Q
 
 
 class PublishJobListingView(APIView):
@@ -104,12 +106,46 @@ class JobListingListView(generics.ListAPIView):
 
 class FetchTenJobsView(generics.ListAPIView):
     serializer_class = JobListingSerializer
+    pagination_class = CustomLimitOffsetPagination
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        page = self.request.query_params.get('page', 1)
-        limit = self.request.query_params.get('limit', 10)
-        offset = (int(page) - 1) * int(limit)
-        return JobListing.objects.all().order_by("-created_at")[offset:offset + int(limit)]
+        queryset = JobListing.objects.all().order_by("-created_at")
+        query_params = self.request.query_params  # Get all query parameters
+
+        valid_filters = {
+            "title": "title__icontains",
+            "location": "location__icontains",
+            "job_location_type": "job_location_type__icontains",
+            "job_type": "job_type__icontains",
+        }
+
+        filters = Q()  # Start with an empty Q object
+        has_filters = False  # Track if any filters are applied
+
+        # Apply standard filters
+        for param, db_field in valid_filters.items():
+            value = query_params.get(param, None)
+            if value:
+                filters &= Q(**{db_field: value})
+                has_filters = True
+
+        # Apply generic search filter
+        search_query = query_params.get("search", None)
+        if search_query:
+            search_filter = (
+                Q(title__icontains=search_query) | 
+                Q(location__icontains=search_query) | 
+                Q(job_location_type__icontains=search_query) | 
+                Q(job_type__icontains=search_query)
+            )
+            filters &= search_filter
+            has_filters = True
+
+        if has_filters:
+            queryset = queryset.filter(filters)
+
+        return queryset
 
 class jobListingView(generics.RetrieveAPIView):
     queryset = JobListing.objects.all()

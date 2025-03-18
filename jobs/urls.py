@@ -13,6 +13,6 @@ urlpatterns = [
     path("my-job-listing/<int:id>", MyJobListingView.as_view(), name="my-jobs"),
     path("my-job-listings/", MyJobListingsView.as_view(), name="my-job-listings"),
     path("", JobListingListView.as_view(), name="get-all-jobs"),
-    path("fetchTenJobs/", FetchTenJobsView.as_view, name="get-first-ten-jobs"),
+    path("fetchTenJobs/", FetchTenJobsView.as_view(), name="fetch-ten-jobs"),
     path("<int:id>", jobListingView.as_view(), name="get-job-by-id"),
 ]

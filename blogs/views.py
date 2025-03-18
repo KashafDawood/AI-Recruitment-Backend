@@ -4,15 +4,13 @@ from rest_framework.permissions import IsAuthenticated
 from core.permissions import IsEmployerAndOwner, IsEmployer
 from .models import Blog
 from .serializers import BlogSerializer, BlogCreateSerializer, BlogSerializer
+from core.pagination import CustomLimitOffsetPagination 
+
 
 class BlogListView(generics.ListAPIView):
     serializer_class = BlogSerializer
-
-    def get_queryset(self):
-        page = self.request.query_params.get('page', 1)
-        limit = self.request.query_params.get('limit', 10)
-        offset = (int(page) - 1) * int(limit)
-        return Blog.objects.filter(status="published").order_by("-created_at")[offset:offset + int(limit)]
+    queryset = Blog.objects.filter(status="published").order_by("-created_at")
+    pagination_class = CustomLimitOffsetPagination
 
 class CreateBlogView(generics.CreateAPIView):
     queryset = Blog.objects.all()
