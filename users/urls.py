@@ -31,6 +31,7 @@ from .views.user_views import (
     DeactivateAccountView,
     ReactivateAccountView,
     ReactivateAccountEmailView,
+    GetUserByUsernameView,
 )
 
 urlpatterns = [
@@ -94,4 +95,5 @@ urlpatterns = [
     path("update-me/", UpdateMeView.as_view(), name="Update Me"),
     path("delete-me/", DeleteMeView.as_view(), name="Delete Me"),
     path("candidate/update-bio/", UpdateBioView.as_view(), name="update-bio"),
+    path("<str:username>/", GetUserByUsernameView.as_view(), name="getuserbyusername"),
 ]

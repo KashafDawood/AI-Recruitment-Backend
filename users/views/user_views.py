@@ -45,6 +45,32 @@ class GetMeView(APIView):
         return Response(profile_data)
 
 
+class GetUserByUsernameView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, username):
+        try:
+            # Fetch the user by username
+            user = User.objects.get(username=username)
+
+            # Get the appropriate profile data based on user role
+            if user.role == "candidate":
+                profile_data = CandidateSerializer(user.candidate_profile).data
+            elif user.role == "employer":
+                profile_data = EmployerSerializer(user.employer_profile).data
+            else:
+                profile_data = {}
+
+            # Add role to the response
+            profile_data["role"] = user.role
+            return Response(profile_data)
+
+        except User.DoesNotExist:
+            return Response(
+                {"error": "User not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+
 class ChangePasswordView(APIView):
     permission_classes = [IsAuthenticated]
 
