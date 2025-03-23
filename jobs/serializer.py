@@ -52,5 +52,6 @@ class JobListingSerializer(serializers.ModelSerializer):
             "job_status",
             "created_at",
             "employer",
+            "applicants",
         ]
-        read_only_fields = ["id", "created_at", "employer"]
+        read_only_fields = ["id", "created_at", "employer", "applicants"]

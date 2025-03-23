@@ -3,7 +3,11 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from core.permissions import IsCandidate, IsJobEmployer
 from .models import Application
-from .serializer import ApplicationSerializer, createApplicationSerializer, UpdateApplicationStatusSerializer
+from .serializer import (
+    ApplicationSerializer,
+    createApplicationSerializer,
+    UpdateApplicationStatusSerializer,
+)
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -33,6 +37,8 @@ class CreateApplicationView(generics.CreateAPIView):
                 )
 
             self.perform_create(serializer)
+            job.applicants += 1
+            job.save()
             return Response(
                 {
                     "message": "You successfully applied on this job",
@@ -74,8 +80,10 @@ class UpdateApplicationStatusView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        applications = Application.objects.filter(job__employer=user, job_id=job_id, id__in=application_ids)
-        existing_ids = applications.values_list('id', flat=True)
+        applications = Application.objects.filter(
+            job__employer=user, job_id=job_id, id__in=application_ids
+        )
+        existing_ids = applications.values_list("id", flat=True)
         missing_ids = set(application_ids) - set(existing_ids)
 
         applications.update(application_status=new_status)
@@ -86,4 +94,3 @@ class UpdateApplicationStatusView(APIView):
         }
 
         return Response(response_data, status=status.HTTP_200_OK)
-

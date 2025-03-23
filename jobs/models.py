@@ -37,4 +37,5 @@ class JobListing(models.Model):
     required_qualifications = models.JSONField(default=list, blank=True)
     preferred_qualifications = models.JSONField(default=list, blank=True)
     benefits = models.JSONField(default=list, blank=True)
+    applicants = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
