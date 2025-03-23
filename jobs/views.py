@@ -12,6 +12,7 @@ from core.pagination import CustomLimitOffsetPagination
 from django.db.models import Q, F
 from django.contrib.postgres.search import TrigramSimilarity
 
+
 class PublishJobListingView(APIView):
     permission_classes = [IsAuthenticated, IsEmployer]
 
@@ -113,7 +114,7 @@ class FetchTenJobsView(generics.ListAPIView):
 
     def get_queryset(self):
         queryset = JobListing.objects.all().order_by("-created_at")
-        query_params = self.request.query_params  
+        query_params = self.request.query_params
 
         valid_filters = {
             "title": "title__icontains",
@@ -137,31 +138,32 @@ class FetchTenJobsView(generics.ListAPIView):
         search_query = query_params.get("search", None)
         if search_query:
             search_query = search_query.lower().strip()
-            search_words = search_query.split()  
+            search_words = search_query.split()
 
             search_filter = Q()
             for word in search_words:
                 search_filter |= (
-                    Q(title__icontains=word) |
-                    Q(company__icontains=word) |
-                    Q(location__icontains=word) |
-                    Q(job_location_type__icontains=word) |
-                    Q(job_type__icontains=word)
+                    Q(title__icontains=word)
+                    | Q(company__icontains=word)
+                    | Q(location__icontains=word)
+                    | Q(job_location_type__icontains=word)
+                    | Q(job_type__icontains=word)
                 )
 
             filters &= search_filter
             has_filters = True
 
             # Apply Trigram Similarity Search only when `search_query` exists
-            queryset = queryset.annotate(
-                similarity=TrigramSimilarity("title", search_query)
-            ).filter(similarity__gt=0.2).order_by(F("similarity").desc())
+            queryset = (
+                queryset.annotate(similarity=TrigramSimilarity("title", search_query))
+                .filter(similarity__gt=0.2)
+                .order_by(F("similarity").desc())
+            )
 
         if has_filters:
             queryset = queryset.filter(filters)
 
         return queryset
-
 
 
 class jobListingView(generics.RetrieveAPIView):
@@ -173,7 +175,6 @@ class jobListingView(generics.RetrieveAPIView):
 
 class EmployerJobListingsView(generics.ListAPIView):
     serializer_class = JobListingSerializer
-    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         username = self.kwargs.get("username")
