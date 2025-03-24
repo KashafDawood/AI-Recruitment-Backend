@@ -4,13 +4,13 @@ from rest_framework.permissions import IsAuthenticated
 from core.permissions import IsEmployerAndOwner, IsEmployer
 from .models import Blog
 from .serializers import BlogSerializer, BlogCreateSerializer, BlogSerializer
-from core.pagination import CustomLimitOffsetPagination 
+from core.pagination import CustomPageNumberPagination 
 
 
 class BlogListView(generics.ListAPIView):
     serializer_class = BlogSerializer
     queryset = Blog.objects.filter(status="published").order_by("-created_at")
-    pagination_class = CustomLimitOffsetPagination
+    pagination_class = CustomPageNumberPagination
 
 class CreateBlogView(generics.CreateAPIView):
     queryset = Blog.objects.all()

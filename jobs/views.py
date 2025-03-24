@@ -8,7 +8,7 @@ from .models import JobListing
 from users.models import User
 from ai.job_filter import job_filtering
 from django.db import transaction
-from core.pagination import CustomLimitOffsetPagination
+from core.pagination import CustomPageNumberPagination 
 from django.db.models import Q, F
 from django.contrib.postgres.search import TrigramSimilarity
 
@@ -109,7 +109,7 @@ class JobListingListView(generics.ListAPIView):
 
 class FetchTenJobsView(generics.ListAPIView):
     serializer_class = JobListingSerializer
-    pagination_class = CustomLimitOffsetPagination
+    pagination_class = CustomPageNumberPagination
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
