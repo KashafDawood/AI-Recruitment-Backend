@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from .models import JobListing
-
+from users.serializers import EmployerSerializer
+from users.serializers import EmployerSerializer
+from users.models import EmployerProfile
 
 class PublishJobListing(serializers.Serializer):
     title = serializers.CharField(max_length=255)
@@ -31,7 +33,7 @@ class PublishJobListing(serializers.Serializer):
 
 
 class JobListingSerializer(serializers.ModelSerializer):
-    employer = serializers.ReadOnlyField(source="employer.username")
+    employer = serializers.SerializerMethodField()  # Fetch employer details dynamically
 
     class Meta:
         model = JobListing
@@ -55,3 +57,14 @@ class JobListingSerializer(serializers.ModelSerializer):
             "applicants",
         ]
         read_only_fields = ["id", "created_at", "employer", "applicants"]
+
+    def get_employer(self, obj):
+        try:
+            employer_profile = EmployerProfile.objects.get(user=obj.employer)
+            return {
+                "name": employer_profile.user.name,
+                "photo": employer_profile.user.photo.url if employer_profile.user.photo else None,
+                "company_name": employer_profile.company_name,
+            }
+        except EmployerProfile.DoesNotExist:
+            return None  # Return None if employer profile does not exist
