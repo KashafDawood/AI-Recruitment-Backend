@@ -63,6 +63,7 @@ class JobListingSerializer(serializers.ModelSerializer):
             employer_profile = EmployerProfile.objects.get(user=obj.employer)
             return {
                 "name": employer_profile.user.name,
+                "username": employer_profile.user.username, 
                 "photo": employer_profile.user.photo.url if employer_profile.user.photo else None,
                 "company_name": employer_profile.company_name,
             }
