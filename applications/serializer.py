@@ -28,7 +28,7 @@ class ApplicationSerializer(serializers.ModelSerializer):
         ]
 
 
-class createApplicationSerializer(serializers.ModelSerializer):
+class ApplyJobSerializer(serializers.ModelSerializer):
     candidate = serializers.ReadOnlyField(source="request.user")
 
     class Meta:
