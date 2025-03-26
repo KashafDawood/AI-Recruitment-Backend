@@ -175,11 +175,64 @@ class jobListingView(generics.RetrieveAPIView):
 
 class EmployerJobListingsView(generics.ListAPIView):
     serializer_class = JobListingSerializer
+    pagination_class = CustomPageNumberPagination
 
     def get_queryset(self):
         username = self.kwargs.get("username")
         try:
             user = User.objects.get(username=username)
-            return JobListing.objects.filter(employer=user).order_by("-created_at")
+            queryset = JobListing.objects.filter(employer=user).order_by("-created_at")
+            
+            query_params = self.request.query_params
+
+            valid_filters = {
+                "title": "title__icontains",
+                "company": "company__icontains",
+                "location": "location__icontains",
+                "job_location_type": "job_location_type__icontains",
+                "job_type": "job_type__icontains",
+            }
+
+            filters = Q()
+            has_filters = False
+
+            # Apply direct field filters
+            for param, db_field in valid_filters.items():
+                value = query_params.get(param, None)
+                if value:
+                    filters &= Q(**{db_field: value.strip()})
+                    has_filters = True
+
+            # Apply enhanced search across multiple fields
+            search_query = query_params.get("search", None)
+            if search_query:
+                search_query = search_query.lower().strip()
+                search_words = search_query.split()
+
+                search_filter = Q()
+                for word in search_words:
+                    search_filter |= (
+                        Q(title__icontains=word)
+                        | Q(company__icontains=word)
+                        | Q(location__icontains=word)
+                        | Q(job_location_type__icontains=word)
+                        | Q(job_type__icontains=word)
+                    )
+
+                filters &= search_filter
+                has_filters = True
+
+                # Apply Trigram Similarity Search only when `search_query` exists
+                queryset = (
+                    queryset.annotate(similarity=TrigramSimilarity("title", search_query))
+                    .filter(similarity__gt=0.2)
+                    .order_by(F("similarity").desc())
+                )
+
+            if has_filters:
+                queryset = queryset.filter(filters)
+
+            return queryset
+
         except User.DoesNotExist:
             return JobListing.objects.none()
