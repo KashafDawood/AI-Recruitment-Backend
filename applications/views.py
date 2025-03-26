@@ -28,10 +28,22 @@ class ApplyJobView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             job = serializer.validated_data["job"]
+            candidate = self.request.user
+
+            # Check if job is closed
             if job.job_status == "closed":
                 return Response(
                     {
                         "message": "Job is closed",
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # Check if user already applied for this job
+            if Application.objects.filter(job=job, candidate=candidate).exists():
+                return Response(
+                    {
+                        "message": "You have already applied for this job",
                     },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
