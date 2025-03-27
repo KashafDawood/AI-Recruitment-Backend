@@ -6,11 +6,17 @@ from rest_framework.permissions import IsAuthenticated
 from core.permissions import IsEmployer, IsEmployerAndOwner
 from .models import JobListing
 from users.models import User
+from applications.models import Application
 from ai.job_filter import job_filtering
 from django.db import transaction
-from core.pagination import CustomPageNumberPagination 
-from django.db.models import Q, F
+from core.pagination import CustomPageNumberPagination
+from django.db.models import Q, F, Exists, OuterRef
 from django.contrib.postgres.search import TrigramSimilarity
+from django.shortcuts import get_object_or_404
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from .models import JobListing
 
 
 class PublishJobListingView(APIView):
@@ -113,7 +119,15 @@ class FetchTenJobsView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        user = self.request.user
         queryset = JobListing.objects.all().order_by("-created_at")
+
+        # Annotate each job with whether the current user has applied
+        user_application = Application.objects.filter(
+            job=OuterRef("pk"), candidate=user
+        )
+        queryset = queryset.annotate(user_has_applied=Exists(user_application))
+
         query_params = self.request.query_params
 
         valid_filters = {
@@ -175,11 +189,98 @@ class jobListingView(generics.RetrieveAPIView):
 
 class EmployerJobListingsView(generics.ListAPIView):
     serializer_class = JobListingSerializer
+    pagination_class = CustomPageNumberPagination
 
     def get_queryset(self):
         username = self.kwargs.get("username")
+        user = self.request.user
+
         try:
-            user = User.objects.get(username=username)
-            return JobListing.objects.filter(employer=user).order_by("-created_at")
+            employer = User.objects.get(username=username)
+            queryset = JobListing.objects.filter(employer=employer).order_by(
+                "-created_at"
+            )
+
+            # Annotate each job with whether the current user has applied
+            if not user.is_anonymous:
+                user_application = Application.objects.filter(
+                    job=OuterRef("pk"), candidate=user
+                )
+                queryset = queryset.annotate(user_has_applied=Exists(user_application))
+
+            query_params = self.request.query_params
+
+            valid_filters = {
+                "title": "title__icontains",
+                "company": "company__icontains",
+                "location": "location__icontains",
+                "job_location_type": "job_location_type__icontains",
+                "job_type": "job_type__icontains",
+            }
+
+            filters = Q()
+            has_filters = False
+
+            # Apply direct field filters
+            for param, db_field in valid_filters.items():
+                value = query_params.get(param, None)
+                if value:
+                    filters &= Q(**{db_field: value.strip()})
+                    has_filters = True
+
+            # Apply enhanced search across multiple fields
+            search_query = query_params.get("search", None)
+            if search_query:
+                search_query = search_query.lower().strip()
+                search_words = search_query.split()
+
+                search_filter = Q()
+                for word in search_words:
+                    search_filter |= (
+                        Q(title__icontains=word)
+                        | Q(company__icontains=word)
+                        | Q(location__icontains=word)
+                        | Q(job_location_type__icontains=word)
+                        | Q(job_type__icontains=word)
+                    )
+
+                filters &= search_filter
+                has_filters = True
+
+                # Apply Trigram Similarity Search only when `search_query` exists
+                queryset = (
+                    queryset.annotate(
+                        similarity=TrigramSimilarity("title", search_query)
+                    )
+                    .filter(similarity__gt=0.2)
+                    .order_by(F("similarity").desc())
+                )
+
+            if has_filters:
+                queryset = queryset.filter(filters)
+
+            return queryset
+
         except User.DoesNotExist:
             return JobListing.objects.none()
+
+
+class SaveJobView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, job_id):
+        job = get_object_or_404(JobListing, id=job_id)
+        if request.user in job.saved_by.all():
+            job.saved_by.remove(request.user)
+            return Response({"message": "Job unsaved."})
+        else:
+            job.saved_by.add(request.user)
+            return Response({"message": "Job saved."})
+
+
+class SavedJobsListView(generics.ListAPIView):
+    serializer_class = JobListingSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return self.request.user.saved_jobs.all()

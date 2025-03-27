@@ -6,6 +6,8 @@ from .views import (
     jobListingView,
     FetchTenJobsView,
     EmployerJobListingsView,
+    SaveJobView,
+    SavedJobsListView,
 )
 
 urlpatterns = [
@@ -19,4 +21,6 @@ urlpatterns = [
     path("", JobListingListView.as_view(), name="get-all-jobs"),
     path("fetchTenJobs/", FetchTenJobsView.as_view(), name="fetch-ten-jobs"),
     path("<int:id>", jobListingView.as_view(), name="get-job-by-id"),
+    path("<int:job_id>/save/", SaveJobView.as_view(), name="save_job"),
+    path("saved/", SavedJobsListView.as_view(), name="get_saved_jobs"),
 ]
