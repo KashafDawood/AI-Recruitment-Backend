@@ -6,10 +6,11 @@ from rest_framework.permissions import IsAuthenticated
 from core.permissions import IsEmployer, IsEmployerAndOwner
 from .models import JobListing
 from users.models import User
+from applications.models import Application
 from ai.job_filter import job_filtering
 from django.db import transaction
-from core.pagination import CustomPageNumberPagination 
-from django.db.models import Q, F
+from core.pagination import CustomPageNumberPagination
+from django.db.models import Q, F, Exists, OuterRef
 from django.contrib.postgres.search import TrigramSimilarity
 
 
@@ -113,7 +114,15 @@ class FetchTenJobsView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        user = self.request.user
         queryset = JobListing.objects.all().order_by("-created_at")
+
+        # Annotate each job with whether the current user has applied
+        user_application = Application.objects.filter(
+            job=OuterRef("pk"), candidate=user
+        )
+        queryset = queryset.annotate(user_has_applied=Exists(user_application))
+
         query_params = self.request.query_params
 
         valid_filters = {
@@ -179,10 +188,21 @@ class EmployerJobListingsView(generics.ListAPIView):
 
     def get_queryset(self):
         username = self.kwargs.get("username")
+        user = self.request.user
+
         try:
-            user = User.objects.get(username=username)
-            queryset = JobListing.objects.filter(employer=user).order_by("-created_at")
-            
+            employer = User.objects.get(username=username)
+            queryset = JobListing.objects.filter(employer=employer).order_by(
+                "-created_at"
+            )
+
+            # Annotate each job with whether the current user has applied
+            if not user.is_anonymous:
+                user_application = Application.objects.filter(
+                    job=OuterRef("pk"), candidate=user
+                )
+                queryset = queryset.annotate(user_has_applied=Exists(user_application))
+
             query_params = self.request.query_params
 
             valid_filters = {
@@ -224,7 +244,9 @@ class EmployerJobListingsView(generics.ListAPIView):
 
                 # Apply Trigram Similarity Search only when `search_query` exists
                 queryset = (
-                    queryset.annotate(similarity=TrigramSimilarity("title", search_query))
+                    queryset.annotate(
+                        similarity=TrigramSimilarity("title", search_query)
+                    )
                     .filter(similarity__gt=0.2)
                     .order_by(F("similarity").desc())
                 )
