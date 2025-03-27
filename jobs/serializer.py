@@ -1,8 +1,8 @@
 from rest_framework import serializers
 from .models import JobListing
-from users.serializers import EmployerSerializer
-from users.serializers import EmployerSerializer
 from users.models import EmployerProfile
+from applications.models import Application
+
 
 class PublishJobListing(serializers.Serializer):
     title = serializers.CharField(max_length=255)
@@ -33,7 +33,8 @@ class PublishJobListing(serializers.Serializer):
 
 
 class JobListingSerializer(serializers.ModelSerializer):
-    employer = serializers.SerializerMethodField()  # Fetch employer details dynamically
+    employer = serializers.SerializerMethodField()
+    has_applied = serializers.SerializerMethodField()
 
     class Meta:
         model = JobListing
@@ -55,16 +56,37 @@ class JobListingSerializer(serializers.ModelSerializer):
             "created_at",
             "employer",
             "applicants",
+            "has_applied",
         ]
-        read_only_fields = ["id", "created_at", "employer", "applicants"]
+        read_only_fields = ["id", "created_at", "employer", "applicants", "has_applied"]
+
+    def get_has_applied(self, obj):
+        # First try to get from annotation
+        if hasattr(obj, "user_has_applied"):
+            return obj.user_has_applied
+
+        # Fall back to the database query if annotation isn't available
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            return Application.objects.filter(job=obj, candidate=request.user).exists()
+        return False
 
     def get_employer(self, obj):
         try:
             employer_profile = EmployerProfile.objects.get(user=obj.employer)
             return {
                 "name": employer_profile.user.name,
-                "photo": employer_profile.user.photo.url if employer_profile.user.photo else None,
+                "username": employer_profile.user.username,
+                "photo": (
+                    employer_profile.user.photo.url
+                    if employer_profile.user.photo
+                    else None
+                ),
                 "company_name": employer_profile.company_name,
+                "address": employer_profile.user.address,
+                "company_size": employer_profile.company_size,
+                "about_company": employer_profile.about_company,
+                "industry": employer_profile.industry,
             }
         except EmployerProfile.DoesNotExist:
             return None  # Return None if employer profile does not exist

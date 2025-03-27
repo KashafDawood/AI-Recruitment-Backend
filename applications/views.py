@@ -5,7 +5,7 @@ from core.permissions import IsCandidate, IsJobEmployer
 from .models import Application
 from .serializer import (
     ApplicationSerializer,
-    createApplicationSerializer,
+    ApplyJobSerializer,
     UpdateApplicationStatusSerializer,
 )
 from rest_framework.views import APIView
@@ -17,9 +17,9 @@ from rest_framework.permissions import IsAuthenticated
 from core.permissions import IsEmployer
 
 
-class CreateApplicationView(generics.CreateAPIView):
+class ApplyJobView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated, IsCandidate]
-    serializer_class = createApplicationSerializer
+    serializer_class = ApplyJobSerializer
 
     def perform_create(self, serializer):
         serializer.save(candidate=self.request.user)
@@ -28,10 +28,22 @@ class CreateApplicationView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             job = serializer.validated_data["job"]
+            candidate = self.request.user
+
+            # Check if job is closed
             if job.job_status == "closed":
                 return Response(
                     {
                         "message": "Job is closed",
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # Check if user already applied for this job
+            if Application.objects.filter(job=job, candidate=candidate).exists():
+                return Response(
+                    {
+                        "message": "You have already applied for this job",
                     },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
