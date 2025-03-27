@@ -83,6 +83,10 @@ class JobListingSerializer(serializers.ModelSerializer):
                     else None
                 ),
                 "company_name": employer_profile.company_name,
+                "address": employer_profile.user.address,
+                "company_size": employer_profile.company_size,
+                "about_company": employer_profile.about_company,
+                "industry": employer_profile.industry,
             }
         except EmployerProfile.DoesNotExist:
             return None  # Return None if employer profile does not exist
