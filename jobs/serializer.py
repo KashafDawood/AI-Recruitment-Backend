@@ -9,6 +9,9 @@ class PublishJobListing(serializers.Serializer):
     company = serializers.CharField(max_length=255, required=False)
     location = serializers.CharField(max_length=255)
     experience = serializers.CharField(max_length=255)
+    experience_level = serializers.ChoiceField(
+        choices=JobListing.EXPERIENCE_LEVEL_CHOICES, default="entry", required=False
+    )
     salary = serializers.CharField(max_length=100, required=False)
     description = serializers.ListField(child=serializers.CharField())
     responsibilities = serializers.ListField(
@@ -49,6 +52,7 @@ class JobListingSerializer(serializers.ModelSerializer):
             "preferred_qualifications",
             "benefits",
             "experience_required",
+            "experience_level",
             "salary",
             "job_type",
             "job_location_type",

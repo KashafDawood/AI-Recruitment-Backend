@@ -17,10 +17,24 @@ class JobListing(models.Model):
 
     JOB_STATUS_CHOICES = [("open", "Open"), ("closed", "Closed")]
 
+    EXPERIENCE_LEVEL_CHOICES = [
+        ("entry", "Entry Level"),
+        ("mid", "Mid Level"),
+        ("senior", "Senior Level"),
+        ("executive", "Executive Level"),
+    ]
+
     employer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     location = models.CharField(max_length=255)
     experience_required = models.CharField(max_length=100)
+    experience_level = models.CharField(
+        max_length=20,
+        choices=EXPERIENCE_LEVEL_CHOICES,
+        default="entry",
+        blank=True,
+        null=True,
+    )
     salary = models.CharField(max_length=100, blank=True, null=True)
     company = models.CharField(max_length=255, blank=True, null=True)
     job_location_type = models.CharField(

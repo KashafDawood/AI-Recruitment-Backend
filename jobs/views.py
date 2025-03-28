@@ -6,12 +6,10 @@ from rest_framework.permissions import IsAuthenticated
 from core.permissions import IsEmployer, IsEmployerAndOwner
 from .models import JobListing
 from users.models import User
-from applications.models import Application
 from ai.job_filter import job_filtering
 from django.db import transaction
 from core.pagination import CustomPageNumberPagination
-from django.db.models import Q, F, Exists, OuterRef
-from django.contrib.postgres.search import TrigramSimilarity
+from .utils import apply_job_filters
 
 
 class PublishJobListingView(APIView):
@@ -117,62 +115,8 @@ class FetchTenJobsView(generics.ListAPIView):
         user = self.request.user
         queryset = JobListing.objects.all().order_by("-created_at")
 
-        # Annotate each job with whether the current user has applied
-        user_application = Application.objects.filter(
-            job=OuterRef("pk"), candidate=user
-        )
-        queryset = queryset.annotate(user_has_applied=Exists(user_application))
-
-        query_params = self.request.query_params
-
-        valid_filters = {
-            "title": "title__icontains",
-            "company": "company__icontains",
-            "location": "location__icontains",
-            "job_location_type": "job_location_type__icontains",
-            "job_type": "job_type__icontains",
-        }
-
-        filters = Q()
-        has_filters = False
-
-        # Apply direct field filters
-        for param, db_field in valid_filters.items():
-            value = query_params.get(param, None)
-            if value:
-                filters &= Q(**{db_field: value.strip()})
-                has_filters = True
-
-        # Apply enhanced search across multiple fields
-        search_query = query_params.get("search", None)
-        if search_query:
-            search_query = search_query.lower().strip()
-            search_words = search_query.split()
-
-            search_filter = Q()
-            for word in search_words:
-                search_filter |= (
-                    Q(title__icontains=word)
-                    | Q(company__icontains=word)
-                    | Q(location__icontains=word)
-                    | Q(job_location_type__icontains=word)
-                    | Q(job_type__icontains=word)
-                )
-
-            filters &= search_filter
-            has_filters = True
-
-            # Apply Trigram Similarity Search only when `search_query` exists
-            queryset = (
-                queryset.annotate(similarity=TrigramSimilarity("title", search_query))
-                .filter(similarity__gt=0.2)
-                .order_by(F("similarity").desc())
-            )
-
-        if has_filters:
-            queryset = queryset.filter(filters)
-
-        return queryset
+        # Use the utility function for filtering
+        return apply_job_filters(queryset, self.request.query_params, user)
 
 
 class jobListingView(generics.RetrieveAPIView):
@@ -196,65 +140,8 @@ class EmployerJobListingsView(generics.ListAPIView):
                 "-created_at"
             )
 
-            # Annotate each job with whether the current user has applied
-            if not user.is_anonymous:
-                user_application = Application.objects.filter(
-                    job=OuterRef("pk"), candidate=user
-                )
-                queryset = queryset.annotate(user_has_applied=Exists(user_application))
-
-            query_params = self.request.query_params
-
-            valid_filters = {
-                "title": "title__icontains",
-                "company": "company__icontains",
-                "location": "location__icontains",
-                "job_location_type": "job_location_type__icontains",
-                "job_type": "job_type__icontains",
-            }
-
-            filters = Q()
-            has_filters = False
-
-            # Apply direct field filters
-            for param, db_field in valid_filters.items():
-                value = query_params.get(param, None)
-                if value:
-                    filters &= Q(**{db_field: value.strip()})
-                    has_filters = True
-
-            # Apply enhanced search across multiple fields
-            search_query = query_params.get("search", None)
-            if search_query:
-                search_query = search_query.lower().strip()
-                search_words = search_query.split()
-
-                search_filter = Q()
-                for word in search_words:
-                    search_filter |= (
-                        Q(title__icontains=word)
-                        | Q(company__icontains=word)
-                        | Q(location__icontains=word)
-                        | Q(job_location_type__icontains=word)
-                        | Q(job_type__icontains=word)
-                    )
-
-                filters &= search_filter
-                has_filters = True
-
-                # Apply Trigram Similarity Search only when `search_query` exists
-                queryset = (
-                    queryset.annotate(
-                        similarity=TrigramSimilarity("title", search_query)
-                    )
-                    .filter(similarity__gt=0.2)
-                    .order_by(F("similarity").desc())
-                )
-
-            if has_filters:
-                queryset = queryset.filter(filters)
-
-            return queryset
+            # Use the utility function for filtering
+            return apply_job_filters(queryset, self.request.query_params, user)
 
         except User.DoesNotExist:
             return JobListing.objects.none()
