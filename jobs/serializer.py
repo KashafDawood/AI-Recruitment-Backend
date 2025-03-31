@@ -35,6 +35,7 @@ class PublishJobListing(serializers.Serializer):
 class JobListingSerializer(serializers.ModelSerializer):
     employer = serializers.SerializerMethodField()
     has_applied = serializers.SerializerMethodField()
+    is_saved = serializers.SerializerMethodField()
 
     class Meta:
         model = JobListing
@@ -57,8 +58,16 @@ class JobListingSerializer(serializers.ModelSerializer):
             "employer",
             "applicants",
             "has_applied",
+            "is_saved", 
         ]
-        read_only_fields = ["id", "created_at", "employer", "applicants", "has_applied"]
+        read_only_fields = [
+            "id",
+            "created_at",
+            "employer",
+            "applicants",
+            "has_applied",
+            "is_saved",
+        ]
 
     def get_has_applied(self, obj):
         # First try to get from annotation
@@ -69,6 +78,12 @@ class JobListingSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         if request and request.user.is_authenticated:
             return Application.objects.filter(job=obj, candidate=request.user).exists()
+        return False
+
+    def get_is_saved(self, obj):
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            return obj.saved_by.filter(id=request.user.id).exists()
         return False
 
     def get_employer(self, obj):
