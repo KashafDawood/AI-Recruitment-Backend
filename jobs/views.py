@@ -10,6 +10,11 @@ from ai.job_filter import job_filtering
 from django.db import transaction
 from core.pagination import CustomPageNumberPagination
 from .utils import apply_job_filters
+from django.shortcuts import get_object_or_404
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from .models import JobListing
 
 
 class PublishJobListingView(APIView):
@@ -145,3 +150,24 @@ class EmployerJobListingsView(generics.ListAPIView):
 
         except User.DoesNotExist:
             return JobListing.objects.none()
+
+
+class SaveJobView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, job_id):
+        job = get_object_or_404(JobListing, id=job_id)
+        if request.user in job.saved_by.all():
+            job.saved_by.remove(request.user)
+            return Response({"message": "Job unsaved."})
+        else:
+            job.saved_by.add(request.user)
+            return Response({"message": "Job saved."})
+
+
+class SavedJobsListView(generics.ListAPIView):
+    serializer_class = JobListingSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return self.request.user.saved_jobs.all()
