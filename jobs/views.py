@@ -4,7 +4,7 @@ from rest_framework import status, generics
 from .serializer import PublishJobListing, JobListingSerializer
 from rest_framework.permissions import IsAuthenticated
 from core.permissions import IsEmployer, IsEmployerAndOwner
-from .models import JobListing
+from .models import JobListing, SavedJob
 from users.models import User
 from ai.job_filter import job_filtering
 from django.db import transaction
@@ -155,19 +155,28 @@ class EmployerJobListingsView(generics.ListAPIView):
 class SaveJobView(APIView):
     permission_classes = [IsAuthenticated]
 
+    MAX_SAVED_JOBS = 100 
+
     def post(self, request, job_id):
         job = get_object_or_404(JobListing, id=job_id)
-        if request.user in job.saved_by.all():
-            job.saved_by.remove(request.user)
-            return Response({"message": "Job unsaved."})
-        else:
-            job.saved_by.add(request.user)
-            return Response({"message": "Job saved."})
 
+        saved_job, created = SavedJob.objects.get_or_create(user=request.user, job=job)
 
-class SavedJobsListView(generics.ListAPIView):
+        if not created:
+            saved_job.delete()
+            return Response({"message": "Job unsaved."}, status=200)
+
+        # Ensure we don’t exceed MAX_SAVED_JOBS
+        if SavedJob.objects.filter(user=request.user).count() > self.MAX_SAVED_JOBS:
+            SavedJob.objects.filter(user=request.user).order_by("saved_at").first().delete()
+
+        return Response({"message": "Job saved."}, status=201)
+
+class SavedJobsListView(generics.ListAPIView):    
     serializer_class = JobListingSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = CustomPageNumberPagination
 
     def get_queryset(self):
-        return self.request.user.saved_jobs.all()
+        saved_jobs = SavedJob.objects.filter(user=self.request.user).order_by("-saved_at")
+        return JobListing.objects.filter(id__in=saved_jobs.values("job_id")).order_by("-created_at")
