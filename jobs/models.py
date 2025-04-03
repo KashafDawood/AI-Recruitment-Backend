@@ -3,6 +3,12 @@ from django.conf import settings
 import json
 
 
+class SavedJob(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    job = models.ForeignKey('JobListing', on_delete=models.CASCADE)
+    saved_at = models.DateTimeField(auto_now_add=True)
+
+
 class JobListing(models.Model):
     JOB_LOCATION_TYPE_CHOICES = [
         ("onsite", "OnSite"),
@@ -38,7 +44,4 @@ class JobListing(models.Model):
     preferred_qualifications = models.JSONField(default=list, blank=True)
     benefits = models.JSONField(default=list, blank=True)
     applicants = models.IntegerField(default=0)
-    saved_by = models.ManyToManyField(
-        settings.AUTH_USER_MODEL, related_name="saved_jobs", blank=True
-    )
     created_at = models.DateTimeField(auto_now_add=True)

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import JobListing
+from .models import JobListing, SavedJob
 from users.models import EmployerProfile
 from applications.models import Application
 
@@ -58,7 +58,7 @@ class JobListingSerializer(serializers.ModelSerializer):
             "employer",
             "applicants",
             "has_applied",
-            "is_saved", 
+            "is_saved",
         ]
         read_only_fields = [
             "id",
@@ -83,7 +83,7 @@ class JobListingSerializer(serializers.ModelSerializer):
     def get_is_saved(self, obj):
         request = self.context.get("request")
         if request and request.user.is_authenticated:
-            return obj.saved_by.filter(id=request.user.id).exists()
+            return SavedJob.objects.filter(user=request.user, job=obj).exists()
         return False
 
     def get_employer(self, obj):
