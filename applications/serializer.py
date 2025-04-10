@@ -16,6 +16,7 @@ class ApplicationSerializer(serializers.ModelSerializer):
             "job_title",
             "application_status",
             "resume",
+            "extracted_resume",
             "contract",
             "created_at",
         ]
@@ -23,6 +24,7 @@ class ApplicationSerializer(serializers.ModelSerializer):
             "id",
             "candidate_username",
             "job_title",
+            "extracted_resume",
             "contract",
             "created_at",
         ]
@@ -38,9 +40,14 @@ class ApplyJobSerializer(serializers.ModelSerializer):
             "candidate",
             "job",
             "resume",
+            "extracted_resume",
             "created_at",
         ]
-        read_only_fields = ["id", "created_at"]
+        read_only_fields = [
+            "id",
+            "created_at",
+            "extracted_resume",
+        ]
 
 
 class UpdateApplicationStatusSerializer(serializers.ModelSerializer):

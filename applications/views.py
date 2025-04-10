@@ -14,7 +14,7 @@ from rest_framework import status
 from .models import Application
 from .serializer import UpdateApplicationStatusSerializer
 from rest_framework.permissions import IsAuthenticated
-from core.permissions import IsEmployer
+from ..core.utils import extract_text_from_pdf, download_pdf_from_url
 
 
 class ApplyJobView(generics.CreateAPIView):
@@ -22,7 +22,25 @@ class ApplyJobView(generics.CreateAPIView):
     serializer_class = ApplyJobSerializer
 
     def perform_create(self, serializer):
-        serializer.save(candidate=self.request.user)
+        # Extract resume text before saving
+        resume = serializer.validated_data.get("resume")
+        extracted_text = ""
+
+        if resume:
+            # If resume is a URL, download it first
+            if resume.startswith("http"):
+                pdf_file = download_pdf_from_url(resume)
+                if not isinstance(pdf_file, str):  # Check if it's not an error message
+                    extracted_text = extract_text_from_pdf(pdf_file)
+            else:
+                # Assume it's a file path or file object
+                try:
+                    extracted_text = extract_text_from_pdf(resume)
+                except Exception as e:
+                    extracted_text = f"Error extracting text: {str(e)}"
+
+        # Save the application with extracted text
+        serializer.save(candidate=self.request.user, extracted_resume=extracted_text)
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)

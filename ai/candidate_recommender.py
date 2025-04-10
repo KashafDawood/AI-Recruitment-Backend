@@ -1,48 +1,27 @@
 from openai import OpenAI
 from django.conf import settings
-import PyPDF2
-import io
-import requests
+from ..core.utils import extract_text_from_pdf, download_pdf_from_url
 import json
-
-
-def extract_text_from_pdf(pdf_file):
-    text = ""
-    try:
-        # If pdf_file is already bytes or file-like object
-        pdf_reader = PyPDF2.PdfReader(
-            io.BytesIO(pdf_file) if isinstance(pdf_file, bytes) else pdf_file
-        )
-        # Extract text from each page
-        for page_num in range(len(pdf_reader.pages)):
-            page = pdf_reader.pages[page_num]
-            text += page.extract_text() + "\n"
-        return text
-    except Exception as e:
-        # Handle exceptions gracefully
-        return f"Error extracting text from PDF: {str(e)}"
-
-
-def download_pdf_from_url(url):
-    """Download PDF content from URL"""
-    try:
-        response = requests.get(url)
-        response.raise_for_status()  # Raise an exception for 4XX/5XX responses
-        return io.BytesIO(response.content)
-    except Exception as e:
-        return f"Error downloading PDF: {str(e)}"
 
 
 def parse_applications(applications):
     parsed_applications = []
     for app in applications:
         try:
-            # Extract resume URL from the dictionary
-            resume_url = app.get("resume")
-            # Download PDF content from URL
-            pdf_content = download_pdf_from_url(resume_url)
-            # Extract text from PDF content
-            resume_content = extract_text_from_pdf(pdf_content)
+            # First check if we already have extracted resume text
+            resume_content = app.get("extracted_resume")
+
+            # If no extracted text is available, try to extract it (fallback method)
+            if not resume_content:
+                resume_url = app.get("resume")
+                if resume_url:
+                    # Download PDF content from URL
+                    pdf_content = download_pdf_from_url(resume_url)
+                    # Extract text from PDF content
+                    resume_content = extract_text_from_pdf(pdf_content)
+                else:
+                    resume_content = "No resume text available"
+
             # Format the application data
             app_text = f"""
             Application ID: {app.get('id')}

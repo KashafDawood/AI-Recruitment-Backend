@@ -137,12 +137,21 @@ class BestCandidateRecommenderView(APIView):
                 required_qualifications = job.required_qualifications
                 preferred_qualifications = job.preferred_qualifications
 
+                # Ensure each application has extracted_resume data
+                for app in applications:
+                    if "id" in app and not app.get("extracted_resume"):
+                        try:
+                            application = Application.objects.get(id=app["id"])
+                            app["extracted_resume"] = application.extracted_resume
+                        except Application.DoesNotExist:
+                            pass
+
                 result = recommend_best_candidate(
                     applications,
                     description,
-                    responsibilities,
-                    required_qualifications,
                     preferred_qualifications,
+                    required_qualifications,
+                    responsibilities,
                 )
 
                 return Response({"result": result}, status=status.HTTP_200_OK)
