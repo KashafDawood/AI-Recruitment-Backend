@@ -1,6 +1,6 @@
 from openai import OpenAI
 from django.conf import settings
-from ..core.utils import extract_text_from_pdf, download_pdf_from_url
+from core.utils import extract_text_from_pdf, download_pdf_from_url
 import json
 
 

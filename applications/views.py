@@ -14,7 +14,7 @@ from rest_framework import status
 from .models import Application
 from .serializer import UpdateApplicationStatusSerializer
 from rest_framework.permissions import IsAuthenticated
-from ..core.utils import extract_text_from_pdf, download_pdf_from_url
+from core.utils import extract_text_from_pdf, download_pdf_from_url
 
 
 class ApplyJobView(generics.CreateAPIView):
