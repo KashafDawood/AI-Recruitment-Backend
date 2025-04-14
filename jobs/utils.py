@@ -31,6 +31,7 @@ def apply_job_filters(queryset, query_params, user=None):
         "job_location_type": "job_location_type__icontains",
         "job_type": "job_type__icontains",
         "experience_level": "experience_level",
+        "job_status": "job_status",
     }
 
     # Build filters

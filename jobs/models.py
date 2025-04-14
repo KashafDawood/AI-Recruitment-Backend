@@ -21,7 +21,7 @@ class JobListing(models.Model):
         ("part time", "Part Time"),
     ]
 
-    JOB_STATUS_CHOICES = [("open", "Open"), ("closed", "Closed")]
+    JOB_STATUS_CHOICES = [("open", "Open"), ("closed", "Closed"), ("draft", "Draft")]
 
     EXPERIENCE_LEVEL_CHOICES = [
         ("entry", "Entry Level"),
