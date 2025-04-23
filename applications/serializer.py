@@ -4,7 +4,15 @@ from .models import Application
 
 class ApplicationSerializer(serializers.ModelSerializer):
     candidate_username = serializers.ReadOnlyField(source="candidate.username")
+    candidate_name = serializers.ReadOnlyField(source="candidate.name")
+    candidate_photo = serializers.SerializerMethodField()
+    candidate_email = serializers.ReadOnlyField(source="candidate.email")
     job_title = serializers.ReadOnlyField(source="job.title")
+
+    def get_candidate_photo(self, obj):
+        if obj.candidate.photo:
+            return str(obj.candidate.photo.url)
+        return None
 
     class Meta:
         model = Application
@@ -12,6 +20,9 @@ class ApplicationSerializer(serializers.ModelSerializer):
             "id",
             "candidate",
             "candidate_username",
+            "candidate_name",
+            "candidate_photo",
+            "candidate_email",
             "job",
             "job_title",
             "application_status",
@@ -23,6 +34,9 @@ class ApplicationSerializer(serializers.ModelSerializer):
         read_only_fields = [
             "id",
             "candidate_username",
+            "candidate_name",
+            "candidate_photo",
+            "candidate_email",
             "job_title",
             "extracted_resume",
             "contract",
