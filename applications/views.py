@@ -15,6 +15,7 @@ from .models import Application
 from .serializer import UpdateApplicationStatusSerializer
 from rest_framework.permissions import IsAuthenticated
 from core.utils import extract_text_from_pdf, download_pdf_from_url
+from django.db import transaction
 
 
 class ApplyJobView(generics.CreateAPIView):
@@ -97,7 +98,9 @@ class JobApplicationsListView(generics.ListAPIView):
 
 class UpdateApplicationStatusView(APIView):
     permission_classes = [IsAuthenticated, IsJobEmployer]
+    serializer_class = UpdateApplicationStatusSerializer
 
+    @transaction.atomic
     def patch(self, request, *args, **kwargs):
         user = request.user
         job_id = self.kwargs.get("job_id")
@@ -110,17 +113,25 @@ class UpdateApplicationStatusView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # Validate the status using the serializer
+        serializer = self.serializer_class(data={"application_status": new_status})
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        # Get all applications that belong to the employer and match the IDs
         applications = Application.objects.filter(
             job__employer=user, job_id=job_id, id__in=application_ids
         )
-        existing_ids = applications.values_list("id", flat=True)
-        missing_ids = set(application_ids) - set(existing_ids)
+        existing_ids = list(applications.values_list("id", flat=True))
+        missing_ids = set(map(int, application_ids)) - set(existing_ids)
 
+        # Bulk update the application status
         applications.update(application_status=new_status)
 
         response_data = {
-            "updated_applications": list(existing_ids),
+            "updated_applications": existing_ids,
             "missing_applications": list(missing_ids),
+            "status": new_status,
         }
 
         return Response(response_data, status=status.HTTP_200_OK)

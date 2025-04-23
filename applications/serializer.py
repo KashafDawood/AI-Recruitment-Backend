@@ -65,7 +65,26 @@ class ApplyJobSerializer(serializers.ModelSerializer):
 
 
 class UpdateApplicationStatusSerializer(serializers.ModelSerializer):
+    APPLICATION_STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("reviewing", "Reviewing"),
+        ("shortlisted", "ShortListed"),
+        ("interviewed", "Interviewed"),
+        ("hired", "Hired"),
+        ("rejected", "Rejected"),
+    ]
+
+    application_status = serializers.ChoiceField(choices=APPLICATION_STATUS_CHOICES)
+
     class Meta:
         model = Application
         fields = ["application_status"]
         read_only_fields = ["id", "candidate", "job", "resume", "created_at"]
+
+    def validate_application_status(self, value):
+        valid_statuses = dict(self.APPLICATION_STATUS_CHOICES).keys()
+        if value not in valid_statuses:
+            raise serializers.ValidationError(
+                f"Invalid status. Choose from: {', '.join(valid_statuses)}"
+            )
+        return value
