@@ -72,6 +72,20 @@ def recommend_best_candidate(
     # Parse applications into a format suitable for AI analysis
     parsed_applications = parse_applications(applications)
 
+    # Parse applications into a format suitable for AI analysis
+    parsed_applications = parse_applications(applications)
+
+    # Add candidate username and status from original applications
+    for parsed_app in parsed_applications:
+        # Find matching original application
+        for app in applications:
+            if str(app.get("id")) == str(parsed_app["application_id"]):
+                parsed_app["candidate_username"] = app.get(
+                    "candidate_username", "Unknown"
+                )
+                parsed_app["application_status"] = app.get("status", "Unknown")
+                break
+
     prompt = f"""
     You are a professional HR assistant specializing in candidate evaluation.
     
@@ -94,6 +108,8 @@ def recommend_best_candidate(
           "candidate_id": "candidate_id",
           "application_id": "application_id",
           "candidate_name": "candidate_name",
+          "candidate_username": "candidate_username",
+          "application_status": "status",
           "match_score": 85.5,
           "match_reasons": [
             {{
