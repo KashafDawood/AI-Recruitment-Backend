@@ -155,7 +155,7 @@ class EmployerJobListingsView(generics.ListAPIView):
 class SaveJobView(APIView):
     permission_classes = [IsAuthenticated]
 
-    MAX_SAVED_JOBS = 100 
+    MAX_SAVED_JOBS = 100
 
     def post(self, request, job_id):
         job = get_object_or_404(JobListing, id=job_id)
@@ -168,15 +168,65 @@ class SaveJobView(APIView):
 
         # Ensure we don’t exceed MAX_SAVED_JOBS
         if SavedJob.objects.filter(user=request.user).count() > self.MAX_SAVED_JOBS:
-            SavedJob.objects.filter(user=request.user).order_by("saved_at").first().delete()
+            SavedJob.objects.filter(user=request.user).order_by(
+                "saved_at"
+            ).first().delete()
 
         return Response({"message": "Job saved."}, status=201)
 
-class SavedJobsListView(generics.ListAPIView):    
+
+class SavedJobsListView(generics.ListAPIView):
     serializer_class = JobListingSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = CustomPageNumberPagination
 
     def get_queryset(self):
-        saved_jobs = SavedJob.objects.filter(user=self.request.user).order_by("-saved_at")
-        return JobListing.objects.filter(id__in=saved_jobs.values("job_id")).order_by("-created_at")
+        saved_jobs = SavedJob.objects.filter(user=self.request.user).order_by(
+            "-saved_at"
+        )
+        return JobListing.objects.filter(id__in=saved_jobs.values("job_id")).order_by(
+            "-created_at"
+        )
+
+
+@api_view(["PATCH"])
+@permission_classes([IsAuthenticated, IsEmployerAndOwner])
+def update_job_status(request, job_id):
+    """
+    Simple endpoint to update just the job status.
+    Valid statuses: 'open', 'closed', 'draft'
+    """
+    try:
+        job = JobListing.objects.get(id=job_id)
+
+        # Check ownership (the permission class should handle this, but double-check)
+        if job.employer != request.user:
+            return Response(
+                {"error": "You do not have permission to modify this job"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # Get the new status from request data
+        new_status = request.data.get("job_status")
+
+        # Validate the status
+        if new_status not in ["open", "closed", "draft"]:
+            return Response(
+                {"error": 'Invalid job status. Must be "open", "closed", or "draft"'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Update the job status
+        job.job_status = new_status
+        job.save(update_fields=["job_status"])
+
+        return Response(
+            {
+                "message": f"Job status updated to {new_status}",
+                "job_id": job_id,
+                "job_status": new_status,
+            }
+        )
+
+    except JobListing.DoesNotExist:
+        return Response({"error": "Job not found"}, status=status.HTTP_404_NOT_FOUND)

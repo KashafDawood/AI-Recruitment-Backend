@@ -8,6 +8,7 @@ from .views import (
     EmployerJobListingsView,
     SaveJobView,
     SavedJobsListView,
+    update_job_status,
 )
 
 urlpatterns = [
@@ -23,4 +24,5 @@ urlpatterns = [
     path("<int:id>", jobListingView.as_view(), name="get-job-by-id"),
     path("<int:job_id>/save/", SaveJobView.as_view(), name="save_job"),
     path("saved/", SavedJobsListView.as_view(), name="get_saved_jobs"),
+    path("<int:job_id>/update-status/", update_job_status, name="update_job_status"),
 ]
