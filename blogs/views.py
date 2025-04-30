@@ -24,7 +24,13 @@ class EmployerBlogListView(generics.ListAPIView):
     pagination_class = CustomPageNumberPagination
 
     def get_queryset(self):
-        return Blog.objects.filter(employer=self.request.user).order_by("-created_at")
+        status_filter = self.request.query_params.get("status", None)
+        queryset = Blog.objects.filter(employer=self.request.user).order_by(
+            "-created_at"
+        )
+        if status_filter:
+            queryset = queryset.filter(status=status_filter)
+        return queryset
 
 
 class CreateBlogView(generics.CreateAPIView):
