@@ -103,8 +103,8 @@ class GenerateBlogView(APIView):
         if serializer.is_valid():
             title = serializer.validated_data["blog_title"]
             description = serializer.validated_data["blog_description"]
-            keywords = serializer.validated_data["blog_keywords"]
-            blog_length = serializer.validated_data["blog_length"]
+            keywords = serializer.validated_data.get("blog_keywords", "")
+            blog_length = serializer.validated_data.get("blog_length", "600 words")
 
             blog = generate_blog_post(title, description, keywords, blog_length)
 
