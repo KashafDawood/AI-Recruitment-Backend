@@ -5,10 +5,12 @@ from core.permissions import IsCandidate, IsJobEmployer
 from .models import Application
 from .serializer import (
     ApplicationSerializer,
+    AppliedJobSerializer,
     ApplyJobSerializer,
     UpdateApplicationStatusSerializer,
 )
 from rest_framework.views import APIView
+from core.pagination import CustomPageNumberPagination
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Application
@@ -135,3 +137,12 @@ class UpdateApplicationStatusView(APIView):
         }
 
         return Response(response_data, status=status.HTTP_200_OK)
+
+
+class AppliedJobsListView(generics.ListAPIView):
+    serializer_class = AppliedJobSerializer  # Updated to use AppliedJobSerializer
+    permission_classes = [IsAuthenticated, IsCandidate]
+    pagination_class = CustomPageNumberPagination
+
+    def get_queryset(self):
+        return Application.objects.filter(candidate=self.request.user).order_by('-created_at')

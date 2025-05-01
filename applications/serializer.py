@@ -88,3 +88,70 @@ class UpdateApplicationStatusSerializer(serializers.ModelSerializer):
                 f"Invalid status. Choose from: {', '.join(valid_statuses)}"
             )
         return value
+
+
+class AppliedJobSerializer(serializers.ModelSerializer):
+    company = serializers.ReadOnlyField(source="job.company")
+    location = serializers.ReadOnlyField(source="job.location")
+    type = serializers.ReadOnlyField(source="job.type")
+    applied_date = serializers.DateTimeField(source="created_at", format="%Y-%m-%d")
+    status = serializers.ReadOnlyField(source="application_status")
+    logo = serializers.SerializerMethodField()
+    salary = serializers.ReadOnlyField(source="job.salary")
+    is_saved = serializers.ReadOnlyField(source="job.is_saved")
+    job_location_type = serializers.ReadOnlyField(source="job.job_location_type")
+    job_status = serializers.ReadOnlyField(source="job.job_status")
+    job_type = serializers.ReadOnlyField(source="job.job_type")
+    applicants = serializers.ReadOnlyField(source="job.applicants")
+    created_at = serializers.DateTimeField(source="job.created_at", format="%Y-%m-%d")
+    candidate = serializers.ReadOnlyField(source="candidate.id")
+    candidate_email = serializers.ReadOnlyField(source="candidate.email")
+    candidate_name = serializers.ReadOnlyField(source="candidate.name")
+    candidate_photo = serializers.SerializerMethodField()
+    candidate_username = serializers.ReadOnlyField(source="candidate.username")
+    contract = serializers.ReadOnlyField()
+    resume = serializers.ReadOnlyField()
+    title = serializers.ReadOnlyField(source="job.title")
+    description = serializers.ReadOnlyField(source="job.description")
+
+    def get_logo(self, obj):
+        try:
+            if obj.job.company and obj.job.company.logo:
+                return obj.job.company.logo.url
+        except AttributeError:
+            return None
+        return None
+
+    def get_candidate_photo(self, obj):
+        if obj.candidate.photo:
+            return obj.candidate.photo.url
+        return None
+
+    class Meta:
+        model = Application
+        fields = [
+            "id",
+            "job",
+            "company",
+            "location",
+            "type",
+            "applied_date",
+            "status",
+            "logo",
+            "salary",
+            "is_saved",
+            "job_location_type",
+            "job_status",
+            "job_type",
+            "applicants",
+            "created_at",
+            "candidate",
+            "candidate_email",
+            "candidate_name",
+            "candidate_photo",
+            "candidate_username",
+            "contract",
+            "resume",
+            "title",
+            "description",
+        ]

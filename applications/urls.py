@@ -3,6 +3,7 @@ from .views import (
     ApplyJobView,
     JobApplicationsListView,
     UpdateApplicationStatusView,
+    AppliedJobsListView,
 )
 
 urlpatterns = [
@@ -15,4 +16,7 @@ urlpatterns = [
     path('job/<int:job_id>/update-status/', 
          UpdateApplicationStatusView.as_view(), 
          name='update-application-status'),
+    path("applied/", 
+         AppliedJobsListView.as_view(), 
+         name="applied-jobs-list"),
 ]
