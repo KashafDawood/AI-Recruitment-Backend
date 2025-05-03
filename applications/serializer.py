@@ -1,3 +1,4 @@
+from jobs.models import SavedJob
 from rest_framework import serializers
 from .models import Application
 
@@ -10,7 +11,7 @@ class ApplicationSerializer(serializers.ModelSerializer):
     job_title = serializers.ReadOnlyField(source="job.title")
 
     def get_candidate_photo(self, obj):
-        if obj.candidate.photo:
+        if (obj.candidate.photo):
             return str(obj.candidate.photo.url)
         return None
 
@@ -97,7 +98,7 @@ class AppliedJobSerializer(serializers.ModelSerializer):
     applied_date = serializers.DateTimeField(source="created_at", format="%Y-%m-%d")
     status = serializers.ReadOnlyField(source="application_status")
     salary = serializers.ReadOnlyField(source="job.salary")
-    is_saved = serializers.ReadOnlyField(source="job.is_saved")
+    is_saved = serializers.SerializerMethodField()
     job_location_type = serializers.ReadOnlyField(source="job.job_location_type")
     job_status = serializers.ReadOnlyField(source="job.job_status")
     job_type = serializers.ReadOnlyField(source="job.job_type")
@@ -115,6 +116,15 @@ class AppliedJobSerializer(serializers.ModelSerializer):
         if obj.candidate.photo:
             return str(obj.candidate.photo.url)
         return None
+
+    def get_is_saved(self, obj):
+        print("obj", obj)
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            is_saved = SavedJob.objects.filter(user=request.user, job=obj.id).exists()
+            print(f"Debug: is_saved for job {obj.id} and user {request.user.id}: {is_saved}")
+            return is_saved
+        return False
 
     class Meta:
         model = Application
