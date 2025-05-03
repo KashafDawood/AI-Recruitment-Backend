@@ -96,7 +96,6 @@ class AppliedJobSerializer(serializers.ModelSerializer):
     type = serializers.ReadOnlyField(source="job.type")
     applied_date = serializers.DateTimeField(source="created_at", format="%Y-%m-%d")
     status = serializers.ReadOnlyField(source="application_status")
-    logo = serializers.SerializerMethodField()
     salary = serializers.ReadOnlyField(source="job.salary")
     is_saved = serializers.ReadOnlyField(source="job.is_saved")
     job_location_type = serializers.ReadOnlyField(source="job.job_location_type")
@@ -109,22 +108,12 @@ class AppliedJobSerializer(serializers.ModelSerializer):
     candidate_name = serializers.ReadOnlyField(source="candidate.name")
     candidate_photo = serializers.SerializerMethodField()
     candidate_username = serializers.ReadOnlyField(source="candidate.username")
-    contract = serializers.ReadOnlyField()
-    resume = serializers.ReadOnlyField()
     title = serializers.ReadOnlyField(source="job.title")
     description = serializers.ReadOnlyField(source="job.description")
 
-    def get_logo(self, obj):
-        try:
-            if obj.job.company and obj.job.company.logo:
-                return obj.job.company.logo.url
-        except AttributeError:
-            return None
-        return None
-
     def get_candidate_photo(self, obj):
         if obj.candidate.photo:
-            return obj.candidate.photo.url
+            return str(obj.candidate.photo.url)
         return None
 
     class Meta:
@@ -137,7 +126,6 @@ class AppliedJobSerializer(serializers.ModelSerializer):
             "type",
             "applied_date",
             "status",
-            "logo",
             "salary",
             "is_saved",
             "job_location_type",
@@ -150,8 +138,6 @@ class AppliedJobSerializer(serializers.ModelSerializer):
             "candidate_name",
             "candidate_photo",
             "candidate_username",
-            "contract",
-            "resume",
             "title",
             "description",
         ]

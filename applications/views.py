@@ -145,4 +145,6 @@ class AppliedJobsListView(generics.ListAPIView):
     pagination_class = CustomPageNumberPagination
 
     def get_queryset(self):
-        return Application.objects.filter(candidate=self.request.user).order_by('-created_at')
+        order = self.request.query_params.get('order', 'asc')
+        order_by = '-created_at' if order == 'desc' else 'created_at'
+        return Application.objects.filter(candidate=self.request.user).order_by(order_by)
