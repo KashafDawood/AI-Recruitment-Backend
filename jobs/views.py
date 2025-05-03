@@ -106,9 +106,11 @@ class MyJobListingView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class JobListingListView(generics.ListAPIView):
-    queryset = JobListing.objects.all()
     serializer_class = JobListingSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return JobListing.objects.exclude(job_status="draft")
 
 
 class FetchTenJobsView(generics.ListAPIView):
@@ -118,7 +120,9 @@ class FetchTenJobsView(generics.ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        queryset = JobListing.objects.all().order_by("-created_at")
+        queryset = JobListing.objects.exclude(job_status="draft").order_by(
+            "-created_at"
+        )
 
         # Use the utility function for filtering
         return apply_job_filters(queryset, self.request.query_params, user)
